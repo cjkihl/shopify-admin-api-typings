@@ -1,17 +1,17 @@
 {
-  "name": "shopify-storefront-api-typings",
+  "name": "shopify-admin-api-typings",
   "version": "1.2.1",
-  "description": "Typings for Shopify Storefront API",
+  "description": "Typings for Shopify Admin API",
   "author": {
     "name": "Carl-Johan Kihl",
     "email": "carljohan.kihl@gmail.com",
     "url": "https://carljohan.me"
   },
-  "repository": "github:caki0915/shopify-storefront-api-typings",
+  "repository": "github:caki0915/shopify-admin-api-typings",
   "bugs": {
-    "url": "https://github.com/caki0915/shopify-storefront-api-typings/issues"
+    "url": "https://github.com/caki0915/shopify-admin-api-typings/issues"
   },
-  "homepage": "https://github.com/caki0915/shopify-storefront-api-typings",
+  "homepage": "https://github.com/caki0915/shopify-admin-api-typings",
   "scripts": {
     "start": "node generateSchema.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -31,7 +31,7 @@
   },
   "keywords": [
     "shopify",
-    "shopify storefront api",
+    "shopify admin api",
     "shopify api",
     "typescript",
     "typedefinitions",
