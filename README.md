@@ -18,30 +18,35 @@ If you're looking for typings for **Shopify Storefront Api**, checkout the [shop
 2. Import typings in your code. (vscode should find the typings and auto import for you).
 
 ```js
-import { Checkout } from "shopify-admin-api-typings";
+import { Order, OrderConnection } from "shopify-admin-api-typings";
 ```
 
 Here is how you can get strongly typed queries with apollo:
 
-```js
-export const QUERY_CHECKOUT = gql`
-  query($id: ID!) {
-    checkout: node(id: $id) {
-      ... on Checkout {
-        ...CheckoutPartialFragment
+```ts
+const QUERY_ORDERS = gql`
+  query Orders {
+    orders(first: 5) {
+      edges {
+        node {
+          createdAt
+        }
       }
     }
   }
-  ${CheckoutFragment}
 `;
-...
-const { data } = useQuery<{ checkout: Checkout }>(QUERY_CHECKOUT);
+
+const {
+  data: { orders },
+} = await client.query<{ orders: OrderConnection }>({
+  query: QUERY_ORDERS,
+});
 ```
 
 Use the `Partial<>` utility if you want to create subsets of the type without getting type errors.
 
 ```js
-const variant: Partial<ProductVariant> = { title: "Variant" };
+const variant: Partial<Order> = { name: "#001" };
 ```
 
 ## Build your own typings
