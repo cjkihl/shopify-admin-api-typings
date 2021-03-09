@@ -113,7 +113,7 @@ export interface QueryRoot {
   /**
    * List of code discounts. Special fields for query params:
    *  * status: active, expired, scheduled
-   *  * type: bxgy, fixed_amount, free_shipping, percentage.
+   *  * discount_type: bogo, fixed_amount, free_shipping, percentage.
    */
   codeDiscountNodes: DiscountCodeNodeConnection;
   
@@ -191,6 +191,11 @@ export interface QueryRoot {
    * The shop-wide shipping settings.
    */
   deliverySettings?: DeliverySetting;
+  
+  /**
+   * List of the shop's redeemed discount code saved searches.
+   */
+  discountRedeemCodeSavedSearches: SavedSearchConnection;
   
   /**
    * Lookup a Domain by ID.
@@ -405,7 +410,7 @@ export interface QueryRoot {
   scriptTag?: ScriptTag;
   
   /**
-   * List of script tags.
+   * A list of script tags.
    */
   scriptTags: ScriptTagConnection;
   
@@ -634,9 +639,9 @@ export type PossibleNodeTypeNames =
 'InventoryItem' |
 'DeliveryMethodDefinition' |
 'DeliveryCondition' |
-'DeliveryRateDefinition' |
 'DeliveryParticipant' |
 'DeliveryCarrierService' |
+'DeliveryRateDefinition' |
 'DeliveryZone' |
 'AppCredit' |
 'AppPurchaseOneTime' |
@@ -653,6 +658,7 @@ export type PossibleNodeTypeNames =
 'LineItem' |
 'Duty' |
 'FulfillmentOrder' |
+'DeliveryMethod' |
 'FulfillmentOrderDestination' |
 'Fulfillment' |
 'FulfillmentEvent' |
@@ -672,6 +678,7 @@ export type PossibleNodeTypeNames =
 'PriceRuleDiscountCode' |
 'ScriptTag' |
 'Shop' |
+'ShopPolicy' |
 'ShopifyPaymentsAccount' |
 'ShopifyPaymentsBankAccount' |
 'ShopifyPaymentsPayout' |
@@ -714,9 +721,9 @@ export interface NodeNameMap {
   InventoryItem: InventoryItem;
   DeliveryMethodDefinition: DeliveryMethodDefinition;
   DeliveryCondition: DeliveryCondition;
-  DeliveryRateDefinition: DeliveryRateDefinition;
   DeliveryParticipant: DeliveryParticipant;
   DeliveryCarrierService: DeliveryCarrierService;
+  DeliveryRateDefinition: DeliveryRateDefinition;
   DeliveryZone: DeliveryZone;
   AppCredit: AppCredit;
   AppPurchaseOneTime: AppPurchaseOneTime;
@@ -733,6 +740,7 @@ export interface NodeNameMap {
   LineItem: LineItem;
   Duty: Duty;
   FulfillmentOrder: FulfillmentOrder;
+  DeliveryMethod: DeliveryMethod;
   FulfillmentOrderDestination: FulfillmentOrderDestination;
   Fulfillment: Fulfillment;
   FulfillmentEvent: FulfillmentEvent;
@@ -752,6 +760,7 @@ export interface NodeNameMap {
   PriceRuleDiscountCode: PriceRuleDiscountCode;
   ScriptTag: ScriptTag;
   Shop: Shop;
+  ShopPolicy: ShopPolicy;
   ShopifyPaymentsAccount: ShopifyPaymentsAccount;
   ShopifyPaymentsBankAccount: ShopifyPaymentsBankAccount;
   ShopifyPaymentsPayout: ShopifyPaymentsPayout;
@@ -1138,6 +1147,10 @@ export const enum MetafieldValueType {
   JSON_STRING = 'JSON_STRING'
 }
 
+/**
+ * An auto-generated type for paginating through multiple Metafields.
+ * 
+ */
 export interface MetafieldConnection {
   
   /**
@@ -1151,6 +1164,10 @@ export interface MetafieldConnection {
   pageInfo: PageInfo;
 }
 
+/**
+ * An auto-generated type which holds one Metafield and a cursor during pagination.
+ * 
+ */
 export interface MetafieldEdge {
   
   /**
@@ -1229,21 +1246,25 @@ export interface PrivateMetafield extends Node {
 export const enum PrivateMetafieldValueType {
   
   /**
-   * A private metafield value type.
+   * A string metafield.
    */
   STRING = 'STRING',
   
   /**
-   * A private metafield value type.
+   * An integer metafield.
    */
   INTEGER = 'INTEGER',
   
   /**
-   * A private metafield value type.
+   * A JSON string metafield.
    */
   JSON_STRING = 'JSON_STRING'
 }
 
+/**
+ * An auto-generated type for paginating through multiple PrivateMetafields.
+ * 
+ */
 export interface PrivateMetafieldConnection {
   
   /**
@@ -1257,6 +1278,10 @@ export interface PrivateMetafieldConnection {
   pageInfo: PageInfo;
 }
 
+/**
+ * An auto-generated type which holds one PrivateMetafield and a cursor during pagination.
+ * 
+ */
 export interface PrivateMetafieldEdge {
   
   /**
@@ -1425,6 +1450,7 @@ export type PossibleHasPublishedTranslationsTypeNames =
 'ProductOption' |
 'ProductVariant' |
 'Shop' |
+'ShopPolicy' |
 'OnlineStoreArticle' |
 'OnlineStoreBlog' |
 'OnlineStorePage';
@@ -1437,6 +1463,7 @@ export interface HasPublishedTranslationsNameMap {
   ProductOption: ProductOption;
   ProductVariant: ProductVariant;
   Shop: Shop;
+  ShopPolicy: ShopPolicy;
   OnlineStoreArticle: OnlineStoreArticle;
   OnlineStoreBlog: OnlineStoreBlog;
   OnlineStorePage: OnlineStorePage;
@@ -1500,7 +1527,9 @@ export type PossibleDisplayableErrorTypeNames =
 'UserError' |
 'DiscountUserError' |
 'PriceRuleUserError' |
+'ProductChangeStatusUserError' |
 'MediaUserError' |
+'ShopPolicyUserError' |
 'TranslationUserError';
 
 export interface DisplayableErrorNameMap {
@@ -1508,7 +1537,9 @@ export interface DisplayableErrorNameMap {
   UserError: UserError;
   DiscountUserError: DiscountUserError;
   PriceRuleUserError: PriceRuleUserError;
+  ProductChangeStatusUserError: ProductChangeStatusUserError;
   MediaUserError: MediaUserError;
+  ShopPolicyUserError: ShopPolicyUserError;
   TranslationUserError: TranslationUserError;
 }
 
@@ -1684,43 +1715,49 @@ export interface AppPlanV2 {
 /**
  * Information about the price charged to a shop every plan period.
  */
-export type AppPricingDetails = AppUsagePricing | AppRecurringPricing;
+export type AppPricingDetails = AppRecurringPricing | AppUsagePricing;
 
 /** Use this to resolve union type AppPricingDetails */
 export type PossibleAppPricingDetailsTypeNames =
-'AppUsagePricing' |
-'AppRecurringPricing';
+'AppRecurringPricing' |
+'AppUsagePricing';
 
 export interface AppPricingDetailsNameMap {
   AppPricingDetails: AppPricingDetails;
-  AppUsagePricing: AppUsagePricing;
   AppRecurringPricing: AppRecurringPricing;
+  AppUsagePricing: AppUsagePricing;
 }
 
 /**
- * Defines the usage pricing model for the app subscription.
+ * Price charged every interval.
  */
-export interface AppUsagePricing {
+export interface AppRecurringPricing {
   
   /**
-   * The total usage records for interval.
-   */
-  balanceUsed: MoneyV2;
-  
-  /**
-   * The limit a store can be charged for usage based pricing.
-   */
-  cappedAmount: MoneyV2;
-  
-  /**
-   * Specifies the interval which usage records are applied.
+   * Specifies the number of days in a billing cycle of the app subscription.
    */
   interval: AppPricingInterval;
   
   /**
-   * The terms and conditions for app usage pricing.
+   * The amount to be charged to the store every billing interval.
    */
-  terms: string;
+  price: MoneyV2;
+}
+
+/**
+ * The billing frequency for the app.
+ */
+export const enum AppPricingInterval {
+  
+  /**
+   * The merchant is billed for this app annually.
+   */
+  ANNUAL = 'ANNUAL',
+  
+  /**
+   * The merchant is billed for this app every 30 days.
+   */
+  EVERY_30_DAYS = 'EVERY_30_DAYS'
 }
 
 /**
@@ -1861,12 +1898,6 @@ export interface AppUsagePricing {
     BIF = 'BIF',
     
     /**
-     * Belarusian Ruble (BYR).
-     * @deprecated `BYR` is deprecated. Use `BYN` available from version `2019-10` onwards instead.
-     */
-    BYR = 'BYR',
-    
-    /**
      * Belize Dollar (BZD).
      */
     BZD = 'BZD',
@@ -1982,11 +2013,6 @@ export interface AppUsagePricing {
     DKK = 'DKK',
     
     /**
-     * Djiboutian Franc (DJF).
-     */
-    DJF = 'DJF',
-    
-    /**
      * Dominican Peso (DOP).
      */
     DOP = 'DOP',
@@ -2007,11 +2033,6 @@ export interface AppUsagePricing {
     ETB = 'ETB',
     
     /**
-     * Falkland Islands Pounds (FKP).
-     */
-    FKP = 'FKP',
-    
-    /**
      * CFP Franc (XPF).
      */
     XPF = 'XPF',
@@ -2020,11 +2041,6 @@ export interface AppUsagePricing {
      * Fijian Dollars (FJD).
      */
     FJD = 'FJD',
-    
-    /**
-     * Gibraltar Pounds (GIP).
-     */
-    GIP = 'GIP',
     
     /**
      * Gambian Dalasi (GMD).
@@ -2050,11 +2066,6 @@ export interface AppUsagePricing {
      * Georgian Lari (GEL).
      */
     GEL = 'GEL',
-    
-    /**
-     * Guinean Franc (GNF).
-     */
-    GNF = 'GNF',
     
     /**
      * Haitian Gourde (HTG).
@@ -2095,11 +2106,6 @@ export interface AppUsagePricing {
      * Israeli New Shekel (NIS).
      */
     ILS = 'ILS',
-    
-    /**
-     * Iranian Rial (IRR).
-     */
-    IRR = 'IRR',
     
     /**
      * Iraqi Dinar (IQD).
@@ -2170,11 +2176,6 @@ export interface AppUsagePricing {
      * Liberian Dollar (LRD).
      */
     LRD = 'LRD',
-    
-    /**
-     * Libyan Dinar (LYD).
-     */
-    LYD = 'LYD',
     
     /**
      * Lithuanian Litai (LTL).
@@ -2342,11 +2343,6 @@ export interface AppUsagePricing {
     WST = 'WST',
     
     /**
-     * Saint Helena Pounds (SHP).
-     */
-    SHP = 'SHP',
-    
-    /**
      * Saudi Riyal (SAR).
      */
     SAR = 'SAR',
@@ -2365,11 +2361,6 @@ export interface AppUsagePricing {
      * Seychellois Rupee (SCR).
      */
     SCR = 'SCR',
-    
-    /**
-     * Sierra Leonean Leone (SLL).
-     */
-    SLL = 'SLL',
     
     /**
      * Singapore Dollars (SGD).
@@ -2442,19 +2433,9 @@ export interface AppUsagePricing {
     THB = 'THB',
     
     /**
-     * Tajikistani Somoni (TJS).
-     */
-    TJS = 'TJS',
-    
-    /**
      * Tanzanian Shilling (TZS).
      */
     TZS = 'TZS',
-    
-    /**
-     * Tongan Pa'anga (TOP).
-     */
-    TOP = 'TOP',
     
     /**
      * Trinidad and Tobago Dollars (TTD).
@@ -2507,11 +2488,6 @@ export interface AppUsagePricing {
     VUV = 'VUV',
     
     /**
-     * Venezuelan Bolivares (VEF).
-     */
-    VEF = 'VEF',
-    
-    /**
      * Vietnamese đồng (VND).
      */
     VND = 'VND',
@@ -2529,34 +2505,120 @@ export interface AppUsagePricing {
     /**
      * Zambian Kwacha (ZMW).
      */
-    ZMW = 'ZMW'
-  }
-  
-  /**
-   * Interval for which pricing details are applied.
-   */
-  export const enum AppPricingInterval {
+    ZMW = 'ZMW',
     
     /**
-     * App plan pricing details are applied every 30 days.
+     * Belarusian Ruble (BYR).
+     * @deprecated `BYR` is deprecated. Use `BYN` available from version `2021-01` onwards instead.
      */
-    EVERY_30_DAYS = 'EVERY_30_DAYS'
+    BYR = 'BYR',
+    
+    /**
+     * Djiboutian Franc (DJF).
+     */
+    DJF = 'DJF',
+    
+    /**
+     * Eritrean Nakfa (ERN).
+     */
+    ERN = 'ERN',
+    
+    /**
+     * Falkland Islands Pounds (FKP).
+     */
+    FKP = 'FKP',
+    
+    /**
+     * Gibraltar Pounds (GIP).
+     */
+    GIP = 'GIP',
+    
+    /**
+     * Guinean Franc (GNF).
+     */
+    GNF = 'GNF',
+    
+    /**
+     * Iranian Rial (IRR).
+     */
+    IRR = 'IRR',
+    
+    /**
+     * Kiribati Dollar (KID).
+     */
+    KID = 'KID',
+    
+    /**
+     * Libyan Dinar (LYD).
+     */
+    LYD = 'LYD',
+    
+    /**
+     * Mauritanian Ouguiya (MRU).
+     */
+    MRU = 'MRU',
+    
+    /**
+     * Sierra Leonean Leone (SLL).
+     */
+    SLL = 'SLL',
+    
+    /**
+     * Saint Helena Pounds (SHP).
+     */
+    SHP = 'SHP',
+    
+    /**
+     * Somali Shilling (SOS).
+     */
+    SOS = 'SOS',
+    
+    /**
+     * Tajikistani Somoni (TJS).
+     */
+    TJS = 'TJS',
+    
+    /**
+     * Tongan Pa'anga (TOP).
+     */
+    TOP = 'TOP',
+    
+    /**
+     * Venezuelan Bolivares (VEF).
+     * @deprecated `VEF` is deprecated. Use `VES` available from version `2020-10` onwards instead.
+     */
+    VEF = 'VEF',
+    
+    /**
+     * Venezuelan Bolivares (VES).
+     */
+    VES = 'VES'
   }
   
   /**
-   * Price charged every interval.
+   * Defines the usage pricing model for the app subscription.
    */
-  export interface AppRecurringPricing {
+  export interface AppUsagePricing {
     
     /**
-     * Specifies the number of days in a billing cycle of the app subscription.
+     * The total usage records for interval.
+     */
+    balanceUsed: MoneyV2;
+    
+    /**
+     * The limit a store can be charged for usage based pricing.
+     */
+    cappedAmount: MoneyV2;
+    
+    /**
+     * Specifies the interval which usage records are applied.
      */
     interval: AppPricingInterval;
     
     /**
-     * The amount to be charged to the store every billing interval.
+     * The terms and conditions for app usage pricing.
      */
-    price: MoneyV2;
+    terms: string;
   }
   
   /**
@@ -2583,6 +2645,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple AppUsageRecords.
+   * 
+   */
   export interface AppUsageRecordConnection {
     
     /**
@@ -2596,6 +2662,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one AppUsageRecord and a cursor during pagination.
+   * 
+   */
   export interface AppUsageRecordEdge {
     
     /**
@@ -2705,6 +2775,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple AppSubscriptions.
+   * 
+   */
   export interface AppSubscriptionConnection {
     
     /**
@@ -2718,6 +2792,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one AppSubscription and a cursor during pagination.
+   * 
+   */
   export interface AppSubscriptionEdge {
     
     /**
@@ -2732,8 +2810,8 @@ export interface AppUsagePricing {
   }
   
   /**
-   * A channel is a group of products and collections that is published to an app. A channel can be a platform or marketplace such
-   * as Facebook or Pinterest, an online store, or POS.
+   * A channel represents an app where you sell a group of products and collections.
+   * A channel can be a platform or marketplace such as Facebook or Pinterest, an online store, or POS.
    * 
    */
   export interface Channel extends Node {
@@ -2809,6 +2887,10 @@ export interface AppUsagePricing {
     supportsFuturePublishing: boolean;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple ResourcePublications.
+   * 
+   */
   export interface ResourcePublicationConnection {
     
     /**
@@ -2822,6 +2904,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one ResourcePublication and a cursor during pagination.
+   * 
+   */
   export interface ResourcePublicationEdge {
     
     /**
@@ -2870,8 +2956,7 @@ export interface AppUsagePricing {
   }
   
   /**
-   * A publication is a group of products and collections that is published to an app. A publication can be a platform or marketplace such
-   * as Facebook or Pinterest, an online store, or POS.
+   * A publication is a group of products and collections that is published to an app.
    * 
    */
   export interface Publication extends Node {
@@ -2922,6 +3007,10 @@ export interface AppUsagePricing {
     supportsFuturePublishing: boolean;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple Collections.
+   * 
+   */
   export interface CollectionConnection {
     
     /**
@@ -2935,6 +3024,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one Collection and a cursor during pagination.
+   * 
+   */
   export interface CollectionEdge {
     
     /**
@@ -3064,6 +3157,11 @@ export interface AppUsagePricing {
     resourcePublications: ResourcePublicationConnection;
     
     /**
+     * The list of resources that are either published or staged to be published to a publication.
+     */
+    resourcePublicationsV2: ResourcePublicationV2Connection;
+    
+    /**
      * The rules used to assign products to the collection. This applies only to smart collections.
      * 
      */
@@ -3162,6 +3260,11 @@ export interface AppUsagePricing {
     resourcePublications: ResourcePublicationConnection;
     
     /**
+     * The list of resources that are either published or staged to be published to a publication.
+     */
+    resourcePublicationsV2: ResourcePublicationV2Connection;
+    
+    /**
      * The list of channels that the resource is not published to.
      * @deprecated Use `unpublishedPublications` instead
      */
@@ -3182,6 +3285,73 @@ export interface AppUsagePricing {
     Product: Product;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple ResourcePublicationV2s.
+   * 
+   */
+  export interface ResourcePublicationV2Connection {
+    
+    /**
+     * A list of edges.
+     */
+    edges: Array<ResourcePublicationV2Edge>;
+    
+    /**
+     * Information to aid in pagination.
+     */
+    pageInfo: PageInfo;
+  }
+  
+  /**
+   * An auto-generated type which holds one ResourcePublicationV2 and a cursor during pagination.
+   * 
+   */
+  export interface ResourcePublicationV2Edge {
+    
+    /**
+     * A cursor for use in pagination.
+     */
+    cursor: string;
+    
+    /**
+     * The item at the end of ResourcePublicationV2Edge.
+     */
+    node: ResourcePublicationV2;
+  }
+  
+  /**
+   * A resource publication represents that a resource either has been published or will be published to a publication.
+   * 
+   */
+  export interface ResourcePublicationV2 {
+    
+    /**
+     * Whether the resource publication is published. If true, then the resource publication is published to the publication.
+     * If false, then the resource publication is staged to be published to the publication.
+     * 
+     */
+    isPublished: boolean;
+    
+    /**
+     * The publication the resource publication is published to.
+     */
+    publication: Publication;
+    
+    /**
+     * The date that the resource publication was or is going to be published to the publication.
+     */
+    publishDate?: DateTime;
+    
+    /**
+     * The resource published to the publication.
+     */
+    publishable: Publishable;
+  }
+  
+  /**
+   * An auto-generated type for paginating through multiple Channels.
+   * 
+   */
   export interface ChannelConnection {
     
     /**
@@ -3195,6 +3365,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one Channel and a cursor during pagination.
+   * 
+   */
   export interface ChannelEdge {
     
     /**
@@ -3208,6 +3382,10 @@ export interface AppUsagePricing {
     node: Channel;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple Publications.
+   * 
+   */
   export interface PublicationConnection {
     
     /**
@@ -3221,6 +3399,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one Publication and a cursor during pagination.
+   * 
+   */
   export interface PublicationEdge {
     
     /**
@@ -3311,6 +3493,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple Products.
+   * 
+   */
   export interface ProductConnection {
     
     /**
@@ -3324,6 +3510,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one Product and a cursor during pagination.
+   * 
+   */
   export interface ProductEdge {
     
     /**
@@ -3480,14 +3670,20 @@ export interface AppUsagePricing {
     onlineStoreUrl?: URL;
     
     /**
-     * A list of custom product options (maximum of 3 per product).
+     * A list of product options. The limit is specified by Shop.resourceLimits.maxProductOptions.
      */
     options: Array<ProductOption>;
     
     /**
      * The price range of the product.
+     * @deprecated Deprecated in API version 2020-10. Use `priceRangeV2` instead.
      */
     priceRange: ProductPriceRange;
+    
+    /**
+     * The price range of the product with prices formatted as decimals.
+     */
+    priceRangeV2: ProductPriceRangeV2;
     
     /**
      * Returns a private metafield found by namespace and key.
@@ -3555,9 +3751,19 @@ export interface AppUsagePricing {
     resourcePublications: ResourcePublicationConnection;
     
     /**
+     * The list of resources that are either published or staged to be published to a publication.
+     */
+    resourcePublicationsV2: ResourcePublicationV2Connection;
+    
+    /**
      * SEO information of the product.
      */
     seo: SEO;
+    
+    /**
+     * The product status.
+     */
+    status: ProductStatus;
     
     /**
      * The storefront ID of the product.
@@ -3565,7 +3771,11 @@ export interface AppUsagePricing {
     storefrontId: StorefrontID;
     
     /**
-     * A list of the tags that have been added to the product.
+     * A comma separated list of tags associated with the product. Updating `tags` overwrites
+     * any existing tags that were previously added to the product. To add new tags without overwriting
+     * existing tags, use the [tagsAdd](https://shopify.dev/docs/admin-api/graphql/reference/common-objects/tagsadd)
+     * mutation.
+     * 
      */
     tags: Array<string>;
     
@@ -3611,7 +3821,10 @@ export interface AppUsagePricing {
     unpublishedPublications: PublicationConnection;
     
     /**
-     * The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) when the product was last modified.
+     * The date and time when the product was last modified.
+     * A product's `updatedAt` value can change for different reasons. For example, if an order
+     * is placed for a product that has inventory tracking set up, then the inventory adjustment
+     * is counted as an update.
      * 
      */
     updatedAt: DateTime;
@@ -3843,6 +4056,46 @@ export interface AppUsagePricing {
     EXTERNAL_VIDEO_INVALID_ASPECT_RATIO = 'EXTERNAL_VIDEO_INVALID_ASPECT_RATIO',
     
     /**
+     * Media could not be created because the metadata could not be read.
+     */
+    VIDEO_METADATA_READ_ERROR = 'VIDEO_METADATA_READ_ERROR',
+    
+    /**
+     * Media could not be created because it has an invalid file type.
+     */
+    VIDEO_INVALID_FILETYPE_ERROR = 'VIDEO_INVALID_FILETYPE_ERROR',
+    
+    /**
+     * Media could not be created because it does not meet the minimum width requirement.
+     */
+    VIDEO_MIN_WIDTH_ERROR = 'VIDEO_MIN_WIDTH_ERROR',
+    
+    /**
+     * Media could not be created because it does not meet the maximum width requirement.
+     */
+    VIDEO_MAX_WIDTH_ERROR = 'VIDEO_MAX_WIDTH_ERROR',
+    
+    /**
+     * Media could not be created because it does not meet the minimum height requirement.
+     */
+    VIDEO_MIN_HEIGHT_ERROR = 'VIDEO_MIN_HEIGHT_ERROR',
+    
+    /**
+     * Media could not be created because it does not meet the maximum height requirement.
+     */
+    VIDEO_MAX_HEIGHT_ERROR = 'VIDEO_MAX_HEIGHT_ERROR',
+    
+    /**
+     * Media could not be created because it does not meet the minimum duration requirement.
+     */
+    VIDEO_MIN_DURATION_ERROR = 'VIDEO_MIN_DURATION_ERROR',
+    
+    /**
+     * Media could not be created because it does not meet the maximum duration requirement.
+     */
+    VIDEO_MAX_DURATION_ERROR = 'VIDEO_MAX_DURATION_ERROR',
+    
+    /**
      * Video failed validation.
      */
     VIDEO_VALIDATION_ERROR = 'VIDEO_VALIDATION_ERROR',
@@ -3850,7 +4103,32 @@ export interface AppUsagePricing {
     /**
      * Model failed validation.
      */
-    MODEL3D_VALIDATION_ERROR = 'MODEL3D_VALIDATION_ERROR'
+    MODEL3D_VALIDATION_ERROR = 'MODEL3D_VALIDATION_ERROR',
+    
+    /**
+     * Media could not be created because the model's thumbnail generation failed.
+     */
+    MODEL3D_THUMBNAIL_GENERATION_ERROR = 'MODEL3D_THUMBNAIL_GENERATION_ERROR',
+    
+    /**
+     * Media could not be created because the model can't be converted to USDZ format.
+     */
+    MODEL3D_GLB_TO_USDZ_CONVERSION_ERROR = 'MODEL3D_GLB_TO_USDZ_CONVERSION_ERROR',
+    
+    /**
+     * Media could not be created because the model file failed processing.
+     */
+    MODEL3D_GLB_OUTPUT_CREATION_ERROR = 'MODEL3D_GLB_OUTPUT_CREATION_ERROR',
+    
+    /**
+     * Media could not be created because the image is an unsupported file type.
+     */
+    UNSUPPORTED_IMAGE_FILE_TYPE = 'UNSUPPORTED_IMAGE_FILE_TYPE',
+    
+    /**
+     * Media could not be created because the image size is too large.
+     */
+    INVALID_IMAGE_FILE_SIZE = 'INVALID_IMAGE_FILE_SIZE'
   }
   
   /**
@@ -3950,6 +4228,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple Images.
+   * 
+   */
   export interface ImageConnection {
     
     /**
@@ -3963,6 +4245,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one Image and a cursor during pagination.
+   * 
+   */
   export interface ImageEdge {
     
     /**
@@ -4000,6 +4286,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple Media.
+   * 
+   */
   export interface MediaConnection {
     
     /**
@@ -4013,6 +4303,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one Media and a cursor during pagination.
+   * 
+   */
   export interface MediaEdge {
     
     /**
@@ -4027,9 +4321,8 @@ export interface AppUsagePricing {
   }
   
   /**
-   * Custom product property names like "Size", "Color", and "Material".
-   * Products are based on permutations of these options.
-   * A product may have a maximum of 3 options.
+   * Product property names like "Size", "Color", and "Material".
+   * Variants are selected based on permutations of these options.
    * 255 characters limit each.
    * 
    */
@@ -4077,6 +4370,26 @@ export interface AppUsagePricing {
     minVariantPrice: MoneyV2;
   }
   
+  /**
+   * The price range of the product.
+   */
+  export interface ProductPriceRangeV2 {
+    
+    /**
+     * The highest variant's price.
+     */
+    maxVariantPrice: MoneyV2;
+    
+    /**
+     * The lowest variant's price.
+     */
+    minVariantPrice: MoneyV2;
+  }
+  
+  /**
+   * An auto-generated type for paginating through multiple ProductPublications.
+   * 
+   */
   export interface ProductPublicationConnection {
     
     /**
@@ -4090,6 +4403,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one ProductPublication and a cursor during pagination.
+   * 
+   */
   export interface ProductPublicationEdge {
     
     /**
@@ -4143,6 +4460,27 @@ export interface AppUsagePricing {
      * SEO Title.
      */
     title?: string;
+  }
+  
+  /**
+   * The possible product statuses.
+   */
+  export const enum ProductStatus {
+    
+    /**
+     * The product is ready to sell and is available to customers on the online store, sales channels, and apps. By default, existing products are set to active.
+     */
+    ACTIVE = 'ACTIVE',
+    
+    /**
+     * The product is no longer being sold and isn't available to customers on sales channels and apps.
+     */
+    ARCHIVED = 'ARCHIVED',
+    
+    /**
+     * The product isn't ready to sell and is unavailable to customers on sales channels and apps. By default, duplicated and unarchived products are set to draft.
+     */
+    DRAFT = 'DRAFT'
   }
   
   /**
@@ -4222,6 +4560,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple ProductVariants.
+   * 
+   */
   export interface ProductVariantConnection {
     
     /**
@@ -4235,6 +4577,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one ProductVariant and a cursor during pagination.
+   * 
+   */
   export interface ProductVariantEdge {
     
     /**
@@ -4315,13 +4661,7 @@ export interface AppUsagePricing {
     image?: Image;
     
     /**
-     * The featured image for the variant.
-     * @deprecated Use the singular `image` field instead. There may never be more than one variant image.
-     */
-    images: Array<Image>;
-    
-    /**
-     * The ID for the inventory item, which is used to query for inventory information.
+     * The inventory item, which is used to query for inventory information.
      */
     inventoryItem: InventoryItem;
     
@@ -4345,6 +4685,11 @@ export interface AppUsagePricing {
      * The ID of the corresponding resource in the REST Admin API.
      */
     legacyResourceId: UnsignedInt64;
+    
+    /**
+     * The media associated with the product variant.
+     */
+    media: MediaConnection;
     
     /**
      * The metafield associated with the resource.
@@ -4595,6 +4940,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple DeliveryProfileItems.
+   * 
+   */
   export interface DeliveryProfileItemConnection {
     
     /**
@@ -4608,6 +4957,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one DeliveryProfileItem and a cursor during pagination.
+   * 
+   */
   export interface DeliveryProfileItemEdge {
     
     /**
@@ -4727,7 +5080,7 @@ export interface AppUsagePricing {
     AF = 'AF',
     
     /**
-     * Aland Islands.
+     * Åland Islands.
      */
     AX = 'AX',
     
@@ -4757,7 +5110,7 @@ export interface AppUsagePricing {
     AI = 'AI',
     
     /**
-     * Antigua And Barbuda.
+     * Antigua & Barbuda.
      */
     AG = 'AG',
     
@@ -4847,7 +5200,7 @@ export interface AppUsagePricing {
     BO = 'BO',
     
     /**
-     * Bosnia And Herzegovina.
+     * Bosnia & Herzegovina.
      */
     BA = 'BA',
     
@@ -4957,12 +5310,12 @@ export interface AppUsagePricing {
     KM = 'KM',
     
     /**
-     * Congo.
+     * Congo - Brazzaville.
      */
     CG = 'CG',
     
     /**
-     * Congo, The Democratic Republic Of The.
+     * Congo - Kinshasa.
      */
     CD = 'CD',
     
@@ -4997,12 +5350,12 @@ export interface AppUsagePricing {
     CY = 'CY',
     
     /**
-     * Czech Republic.
+     * Czechia.
      */
     CZ = 'CZ',
     
     /**
-     * Côte d'Ivoire.
+     * Côte d’Ivoire.
      */
     CI = 'CI',
     
@@ -5067,7 +5420,7 @@ export interface AppUsagePricing {
     ET = 'ET',
     
     /**
-     * Falkland Islands (Malvinas).
+     * Falkland Islands.
      */
     FK = 'FK',
     
@@ -5172,7 +5525,7 @@ export interface AppUsagePricing {
     GN = 'GN',
     
     /**
-     * Guinea Bissau.
+     * Guinea-Bissau.
      */
     GW = 'GW',
     
@@ -5187,12 +5540,12 @@ export interface AppUsagePricing {
     HT = 'HT',
     
     /**
-     * Heard Island And Mcdonald Islands.
+     * Heard & McDonald Islands.
      */
     HM = 'HM',
     
     /**
-     * Holy See (Vatican City State).
+     * Vatican City.
      */
     VA = 'VA',
     
@@ -5202,7 +5555,7 @@ export interface AppUsagePricing {
     HN = 'HN',
     
     /**
-     * Hong Kong.
+     * Hong Kong SAR.
      */
     HK = 'HK',
     
@@ -5227,7 +5580,7 @@ export interface AppUsagePricing {
     ID = 'ID',
     
     /**
-     * Iran, Islamic Republic Of.
+     * Iran.
      */
     IR = 'IR',
     
@@ -5242,7 +5595,7 @@ export interface AppUsagePricing {
     IE = 'IE',
     
     /**
-     * Isle Of Man.
+     * Isle of Man.
      */
     IM = 'IM',
     
@@ -5292,7 +5645,7 @@ export interface AppUsagePricing {
     KI = 'KI',
     
     /**
-     * Korea, Democratic People's Republic Of.
+     * North Korea.
      */
     KP = 'KP',
     
@@ -5312,7 +5665,7 @@ export interface AppUsagePricing {
     KG = 'KG',
     
     /**
-     * Lao People's Democratic Republic.
+     * Laos.
      */
     LA = 'LA',
     
@@ -5337,7 +5690,7 @@ export interface AppUsagePricing {
     LR = 'LR',
     
     /**
-     * Libyan Arab Jamahiriya.
+     * Libya.
      */
     LY = 'LY',
     
@@ -5357,7 +5710,7 @@ export interface AppUsagePricing {
     LU = 'LU',
     
     /**
-     * Macao.
+     * Macao SAR.
      */
     MO = 'MO',
     
@@ -5417,7 +5770,7 @@ export interface AppUsagePricing {
     MX = 'MX',
     
     /**
-     * Moldova, Republic of.
+     * Moldova.
      */
     MD = 'MD',
     
@@ -5452,7 +5805,7 @@ export interface AppUsagePricing {
     MZ = 'MZ',
     
     /**
-     * Myanmar.
+     * Myanmar (Burma).
      */
     MM = 'MM',
     
@@ -5537,7 +5890,7 @@ export interface AppUsagePricing {
     PK = 'PK',
     
     /**
-     * Palestinian Territory, Occupied.
+     * Palestinian Territories.
      */
     PS = 'PS',
     
@@ -5567,7 +5920,7 @@ export interface AppUsagePricing {
     PH = 'PH',
     
     /**
-     * Pitcairn.
+     * Pitcairn Islands.
      */
     PN = 'PN',
     
@@ -5587,12 +5940,12 @@ export interface AppUsagePricing {
     QA = 'QA',
     
     /**
-     * Republic of Cameroon.
+     * Cameroon.
      */
     CM = 'CM',
     
     /**
-     * Reunion.
+     * Réunion.
      */
     RE = 'RE',
     
@@ -5612,32 +5965,32 @@ export interface AppUsagePricing {
     RW = 'RW',
     
     /**
-     * Saint Barthélemy.
+     * St. Barthélemy.
      */
     BL = 'BL',
     
     /**
-     * Saint Helena.
+     * St. Helena.
      */
     SH = 'SH',
     
     /**
-     * Saint Kitts And Nevis.
+     * St. Kitts & Nevis.
      */
     KN = 'KN',
     
     /**
-     * Saint Lucia.
+     * St. Lucia.
      */
     LC = 'LC',
     
     /**
-     * Saint Martin.
+     * St. Martin.
      */
     MF = 'MF',
     
     /**
-     * Saint Pierre And Miquelon.
+     * St. Pierre & Miquelon.
      */
     PM = 'PM',
     
@@ -5652,7 +6005,7 @@ export interface AppUsagePricing {
     SM = 'SM',
     
     /**
-     * Sao Tome And Principe.
+     * São Tomé & Príncipe.
      */
     ST = 'ST',
     
@@ -5717,7 +6070,7 @@ export interface AppUsagePricing {
     ZA = 'ZA',
     
     /**
-     * South Georgia And The South Sandwich Islands.
+     * South Georgia & South Sandwich Islands.
      */
     GS = 'GS',
     
@@ -5742,7 +6095,7 @@ export interface AppUsagePricing {
     LK = 'LK',
     
     /**
-     * St. Vincent.
+     * St. Vincent & Grenadines.
      */
     VC = 'VC',
     
@@ -5757,7 +6110,7 @@ export interface AppUsagePricing {
     SR = 'SR',
     
     /**
-     * Svalbard And Jan Mayen.
+     * Svalbard & Jan Mayen.
      */
     SJ = 'SJ',
     
@@ -5787,7 +6140,7 @@ export interface AppUsagePricing {
     TJ = 'TJ',
     
     /**
-     * Tanzania, United Republic Of.
+     * Tanzania.
      */
     TZ = 'TZ',
     
@@ -5797,7 +6150,7 @@ export interface AppUsagePricing {
     TH = 'TH',
     
     /**
-     * Timor Leste.
+     * Timor-Leste.
      */
     TL = 'TL',
     
@@ -5817,7 +6170,7 @@ export interface AppUsagePricing {
     TO = 'TO',
     
     /**
-     * Trinidad and Tobago.
+     * Trinidad & Tobago.
      */
     TT = 'TT',
     
@@ -5837,7 +6190,7 @@ export interface AppUsagePricing {
     TM = 'TM',
     
     /**
-     * Turks and Caicos Islands.
+     * Turks & Caicos Islands.
      */
     TC = 'TC',
     
@@ -5872,7 +6225,7 @@ export interface AppUsagePricing {
     US = 'US',
     
     /**
-     * United States Minor Outlying Islands.
+     * U.S. Outlying Islands.
      */
     UM = 'UM',
     
@@ -5902,12 +6255,12 @@ export interface AppUsagePricing {
     VN = 'VN',
     
     /**
-     * Virgin Islands, British.
+     * British Virgin Islands.
      */
     VG = 'VG',
     
     /**
-     * Wallis And Futuna.
+     * Wallis & Futuna.
      */
     WF = 'WF',
     
@@ -5993,6 +6346,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple Locations.
+   * 
+   */
   export interface LocationConnection {
     
     /**
@@ -6006,6 +6363,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one Location and a cursor during pagination.
+   * 
+   */
   export interface LocationEdge {
     
     /**
@@ -6112,7 +6473,7 @@ export interface AppUsagePricing {
     name: string;
     
     /**
-     * Indicates whether or not this location ships inventory.
+     * Indicates whether or not this location is used for calculating shipping rates.
      */
     shipsInventory: boolean;
     
@@ -6463,6 +6824,10 @@ export interface AppUsagePricing {
     variant: ProductVariant;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple CountryHarmonizedSystemCodes.
+   * 
+   */
   export interface CountryHarmonizedSystemCodeConnection {
     
     /**
@@ -6476,6 +6841,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one CountryHarmonizedSystemCode and a cursor during pagination.
+   * 
+   */
   export interface CountryHarmonizedSystemCodeEdge {
     
     /**
@@ -6506,6 +6875,10 @@ export interface AppUsagePricing {
     harmonizedSystemCode: string;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple InventoryLevels.
+   * 
+   */
   export interface InventoryLevelConnection {
     
     /**
@@ -6519,6 +6892,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one InventoryLevel and a cursor during pagination.
+   * 
+   */
   export interface InventoryLevelEdge {
     
     /**
@@ -6600,6 +6977,10 @@ export interface AppUsagePricing {
     zip?: string;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple DeliveryLocationGroupZones.
+   * 
+   */
   export interface DeliveryLocationGroupZoneConnection {
     
     /**
@@ -6613,6 +6994,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one DeliveryLocationGroupZone and a cursor during pagination.
+   * 
+   */
   export interface DeliveryLocationGroupZoneEdge {
     
     /**
@@ -6703,6 +7088,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple DeliveryMethodDefinitions.
+   * 
+   */
   export interface DeliveryMethodDefinitionConnection {
     
     /**
@@ -6716,6 +7105,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one DeliveryMethodDefinition and a cursor during pagination.
+   * 
+   */
   export interface DeliveryMethodDefinitionEdge {
     
     /**
@@ -6794,15 +7187,15 @@ export interface AppUsagePricing {
   /**
    * The criteria (weight or price) that the field must meet based on the operator.
    */
-  export type DeliveryConditionCriteria = Weight | MoneyV2;
+  export type DeliveryConditionCriteria = MoneyV2 | Weight;
   
   /** Use this to resolve union type DeliveryConditionCriteria */
-  export type PossibleDeliveryConditionCriteriaTypeNames = 'Weight' | 'MoneyV2';
+  export type PossibleDeliveryConditionCriteriaTypeNames = 'MoneyV2' | 'Weight';
   
   export interface DeliveryConditionCriteriaNameMap {
     DeliveryConditionCriteria: DeliveryConditionCriteria;
-    Weight: Weight;
     MoneyV2: MoneyV2;
+    Weight: Weight;
   }
   
   /**
@@ -6882,33 +7275,17 @@ export interface AppUsagePricing {
   /**
    * Rate provided by a rate definition or a participant.
    */
-  export type DeliveryRateProvider = DeliveryRateDefinition | DeliveryParticipant;
+  export type DeliveryRateProvider = DeliveryParticipant | DeliveryRateDefinition;
   
   /** Use this to resolve union type DeliveryRateProvider */
   export type PossibleDeliveryRateProviderTypeNames =
-  'DeliveryRateDefinition' |
-  'DeliveryParticipant';
+  'DeliveryParticipant' |
+  'DeliveryRateDefinition';
   
   export interface DeliveryRateProviderNameMap {
     DeliveryRateProvider: DeliveryRateProvider;
-    DeliveryRateDefinition: DeliveryRateDefinition;
     DeliveryParticipant: DeliveryParticipant;
-  }
-  
-  /**
-   * The merchant-defined rate of the DeliveryMethodDefinition.
-   */
-  export interface DeliveryRateDefinition extends Node {
-    
-    /**
-     * Globally unique identifier.
-     */
-    id: string;
-    
-    /**
-     * The price of this rate.
-     */
-    price: MoneyV2;
+    DeliveryRateDefinition: DeliveryRateDefinition;
   }
   
   /**
@@ -7027,6 +7404,22 @@ export interface AppUsagePricing {
   }
   
   /**
+   * The merchant-defined rate of the DeliveryMethodDefinition.
+   */
+  export interface DeliveryRateDefinition extends Node {
+    
+    /**
+     * Globally unique identifier.
+     */
+    id: string;
+    
+    /**
+     * The price of this rate.
+     */
+    price: MoneyV2;
+  }
+  
+  /**
    * A zone is a geographical area that contains delivery methods within a delivery profile.
    */
   export interface DeliveryZone extends Node {
@@ -7087,6 +7480,10 @@ export interface AppUsagePricing {
     CONTINUE = 'CONTINUE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple ProductVariantPricePairs.
+   * 
+   */
   export interface ProductVariantPricePairConnection {
     
     /**
@@ -7100,6 +7497,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one ProductVariantPricePair and a cursor during pagination.
+   * 
+   */
   export interface ProductVariantPricePairEdge {
     
     /**
@@ -7131,8 +7532,8 @@ export interface AppUsagePricing {
   }
   
   /**
-   * Custom properties that a shop owner can use to define product variants.
-   * Multiple options can exist. Options are represented as: option1, option2, option3, etc.
+   * Properties used by customers to select a product variant.
+   * Products can have multiple options, like different sizes or colors.
    * 
    */
   export interface SelectedOption {
@@ -7148,6 +7549,10 @@ export interface AppUsagePricing {
     value: string;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple CollectionPublications.
+   * 
+   */
   export interface CollectionPublicationConnection {
     
     /**
@@ -7161,6 +7566,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one CollectionPublication and a cursor during pagination.
+   * 
+   */
   export interface CollectionPublicationEdge {
     
     /**
@@ -7278,7 +7687,7 @@ export interface AppUsagePricing {
     VARIANT_PRICE = 'VARIANT_PRICE',
     
     /**
-     * The `is_price_reduced` attribute.
+     * The `is_price_reduced` attribute, a boolean attribute evaluated as `true` if a product has a `compare_at_price` set on any of its variants.
      */
     IS_PRICE_REDUCED = 'IS_PRICE_REDUCED',
     
@@ -7429,6 +7838,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple AppCredits.
+   * 
+   */
   export interface AppCreditConnection {
     
     /**
@@ -7442,6 +7855,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one AppCredit and a cursor during pagination.
+   * 
+   */
   export interface AppCreditEdge {
     
     /**
@@ -7486,6 +7903,10 @@ export interface AppUsagePricing {
     test: boolean;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple AppPurchaseOneTimes.
+   * 
+   */
   export interface AppPurchaseOneTimeConnection {
     
     /**
@@ -7499,6 +7920,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one AppPurchaseOneTime and a cursor during pagination.
+   * 
+   */
   export interface AppPurchaseOneTimeEdge {
     
     /**
@@ -7671,6 +8096,10 @@ export interface AppUsagePricing {
     PRIVATE = 'PRIVATE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple AppInstallations.
+   * 
+   */
   export interface AppInstallationConnection {
     
     /**
@@ -7684,6 +8113,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one AppInstallation and a cursor during pagination.
+   * 
+   */
   export interface AppInstallationEdge {
     
     /**
@@ -7700,23 +8133,315 @@ export interface AppUsagePricing {
   /**
    * An automatic discount.
    */
-  export type DiscountAutomatic = DiscountAutomaticBxgy | DiscountAutomaticBasic;
+  export type DiscountAutomatic = DiscountAutomaticBasic | DiscountAutomaticBxgy;
   
   /** Use this to resolve union type DiscountAutomatic */
   export type PossibleDiscountAutomaticTypeNames =
-  'DiscountAutomaticBxgy' |
-  'DiscountAutomaticBasic';
+  'DiscountAutomaticBasic' |
+  'DiscountAutomaticBxgy';
   
   export interface DiscountAutomaticNameMap {
     DiscountAutomatic: DiscountAutomatic;
-    DiscountAutomaticBxgy: DiscountAutomaticBxgy;
     DiscountAutomaticBasic: DiscountAutomaticBasic;
+    DiscountAutomaticBxgy: DiscountAutomaticBxgy;
+  }
+  
+  /**
+   * An automatic basic discount.
+   */
+  export interface DiscountAutomaticBasic {
+    
+    /**
+     * The number of times the discount has been used. This value is updated asynchronously and can be different than the actual usage count.
+     */
+    asyncUsageCount: number;
+    
+    /**
+     * The date and time when the discount was created.
+     */
+    createdAt: DateTime;
+    
+    /**
+     * The qualifying items in an order, the quantity of each one, and the total value of the discount.
+     */
+    customerGets: DiscountCustomerGets;
+    
+    /**
+     * The date and time when the discount ends. For open-ended discounts, use `null`.
+     */
+    endsAt?: DateTime;
+    
+    /**
+     * The minimum subtotal or quantity that's required for the discount to be applied.
+     */
+    minimumRequirement: DiscountMinimumRequirement;
+    
+    /**
+     * A short summary of the discount.
+     */
+    shortSummary: string;
+    
+    /**
+     * The date and time when the discount starts.
+     */
+    startsAt: DateTime;
+    
+    /**
+     * The status of the discount.
+     */
+    status: DiscountStatus;
+    
+    /**
+     * A detailed summary of the discount.
+     */
+    summary: string;
+    
+    /**
+     * The title of the discount.
+     */
+    title: string;
+    
+    /**
+     * The number of times that the discount has been used.
+     * @deprecated Use `asyncUsageCount` instead
+     */
+    usageCount: number;
+  }
+  
+  /**
+   * The qualifying items in an order, the quantity of each one, and the total value of the discount.
+   */
+  export interface DiscountCustomerGets {
+    
+    /**
+     * The items to which the discount applies.
+     */
+    items: DiscountItems;
+    
+    /**
+     * Entitled quantity and the discount value.
+     */
+    value: DiscountCustomerGetsValue;
+  }
+  
+  /**
+   * Entitled or prerequisite items on a discount. An item could be either collection or product or product_variant.
+   * 
+   */
+  export type DiscountItems =
+  AllDiscountItems |
+  DiscountCollections |
+  DiscountProducts;
+  
+  /** Use this to resolve union type DiscountItems */
+  export type PossibleDiscountItemsTypeNames =
+  'AllDiscountItems' |
+  'DiscountCollections' |
+  'DiscountProducts';
+  
+  export interface DiscountItemsNameMap {
+    DiscountItems: DiscountItems;
+    AllDiscountItems: AllDiscountItems;
+    DiscountCollections: DiscountCollections;
+    DiscountProducts: DiscountProducts;
+  }
+  
+  /**
+   * Whether all items in the cart are entitled to the discount.
+   */
+  export interface AllDiscountItems {
+    
+    /**
+     * Whether all items are selected. The value is hardcoded to `true`.
+     */
+    allItems: boolean;
+  }
+  
+  /**
+   * A list of collections that the discount can have as a prerequisite or entitlement.
+   */
+  export interface DiscountCollections {
+    
+    /**
+     * A list of collections that the discount can have as a prerequisite or entitlement.
+     */
+    collections: CollectionConnection;
+  }
+  
+  /**
+   * The entitled or prerequisite products and product variants for a discount.
+   */
+  export interface DiscountProducts {
+    
+    /**
+     * A list of product variants that the discount can have as a prerequisite or entitlement.
+     */
+    productVariants: ProductVariantConnection;
+    
+    /**
+     * A list of products that the discount can have as a prerequisite or entitlement.
+     */
+    products: ProductConnection;
+  }
+  
+  /**
+   * The value of the discount and how it will be applied.
+   */
+  export type DiscountCustomerGetsValue =
+  DiscountAmount |
+  DiscountOnQuantity |
+  DiscountPercentage;
+  
+  /** Use this to resolve union type DiscountCustomerGetsValue */
+  export type PossibleDiscountCustomerGetsValueTypeNames =
+  'DiscountAmount' |
+  'DiscountOnQuantity' |
+  'DiscountPercentage';
+  
+  export interface DiscountCustomerGetsValueNameMap {
+    DiscountCustomerGetsValue: DiscountCustomerGetsValue;
+    DiscountAmount: DiscountAmount;
+    DiscountOnQuantity: DiscountOnQuantity;
+    DiscountPercentage: DiscountPercentage;
+  }
+  
+  /**
+   * The fixed amount value of a discount.
+   */
+  export interface DiscountAmount {
+    
+    /**
+     * The value of the discount.
+     */
+    amount: MoneyV2;
+    
+    /**
+     * If true, then the discount is applied to each of the entitled items. If false, then the amount is split across all of the entitled items.
+     */
+    appliesOnEachItem: boolean;
+  }
+  
+  /**
+   * The quantity of items discounted, the discount value, and how the discount will be applied.
+   */
+  export interface DiscountOnQuantity {
+    
+    /**
+     * The discount's effect on qualifying items.
+     */
+    effect: DiscountEffect;
+    
+    /**
+     * The number of items being discounted.
+     */
+    quantity: DiscountQuantity;
+  }
+  
+  /**
+   * The type of discount that will be applied. Currently, only percentage off is supported.
+   */
+  export type DiscountEffect = DiscountPercentage;
+  
+  /** Use this to resolve union type DiscountEffect */
+  export type PossibleDiscountEffectTypeNames = 'DiscountPercentage';
+  
+  export interface DiscountEffectNameMap {
+    DiscountEffect: DiscountEffect;
+    DiscountPercentage: DiscountPercentage;
+  }
+  
+  /**
+   * The percentage value of the discount.
+   */
+  export interface DiscountPercentage {
+    
+    /**
+     * The percentage value of the discount.
+     */
+    percentage: number;
+  }
+  
+  /**
+   * The quantity of items in discount.
+   */
+  export interface DiscountQuantity {
+    
+    /**
+     * The quantity of items.
+     */
+    quantity: UnsignedInt64;
+  }
+  
+  /**
+   * The minimum subtotal or quantity requirements for the discount.
+   */
+  export type DiscountMinimumRequirement =
+  DiscountMinimumQuantity |
+  DiscountMinimumSubtotal;
+  
+  /** Use this to resolve union type DiscountMinimumRequirement */
+  export type PossibleDiscountMinimumRequirementTypeNames =
+  'DiscountMinimumQuantity' |
+  'DiscountMinimumSubtotal';
+  
+  export interface DiscountMinimumRequirementNameMap {
+    DiscountMinimumRequirement: DiscountMinimumRequirement;
+    DiscountMinimumQuantity: DiscountMinimumQuantity;
+    DiscountMinimumSubtotal: DiscountMinimumSubtotal;
+  }
+  
+  /**
+   * The minimum quantity of items required for the discount to apply.
+   */
+  export interface DiscountMinimumQuantity {
+    
+    /**
+     * The minimum quantity of items that's required for the discount to be applied.
+     */
+    greaterThanOrEqualToQuantity: UnsignedInt64;
+  }
+  
+  /**
+   * The minimum subtotal required for the discount to apply.
+   */
+  export interface DiscountMinimumSubtotal {
+    
+    /**
+     * The minimum subtotal that's required for the discount to be applied.
+     */
+    greaterThanOrEqualToSubtotal: MoneyV2;
+  }
+  
+  /**
+   * The status of the discount.
+   */
+  export const enum DiscountStatus {
+    
+    /**
+     * The discount is active.
+     */
+    ACTIVE = 'ACTIVE',
+    
+    /**
+     * The discount is expired.
+     */
+    EXPIRED = 'EXPIRED',
+    
+    /**
+     * The discount is scheduled.
+     */
+    SCHEDULED = 'SCHEDULED'
   }
   
   /**
    * An automatic BXGY discount.
    */
   export interface DiscountAutomaticBxgy extends Node, HasEvents {
+    
+    /**
+     * The number of times the discount has been used. This value is updated asynchronously and can be different than the actual usage count.
+     */
+    asyncUsageCount: number;
     
     /**
      * The date and time when the discount was created.
@@ -7837,6 +8562,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple Events.
+   * 
+   */
   export interface EventConnection {
     
     /**
@@ -7850,6 +8579,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one Event and a cursor during pagination.
+   * 
+   */
   export interface EventEdge {
     
     /**
@@ -7932,92 +8665,21 @@ export interface AppUsagePricing {
   }
   
   /**
-   * Entitled or prerequisite items on a discount. An item could be either collection or product or product_variant.
-   * 
-   */
-  export type DiscountItems =
-  AllDiscountItems |
-  DiscountProducts |
-  DiscountCollections;
-  
-  /** Use this to resolve union type DiscountItems */
-  export type PossibleDiscountItemsTypeNames =
-  'AllDiscountItems' |
-  'DiscountProducts' |
-  'DiscountCollections';
-  
-  export interface DiscountItemsNameMap {
-    DiscountItems: DiscountItems;
-    AllDiscountItems: AllDiscountItems;
-    DiscountProducts: DiscountProducts;
-    DiscountCollections: DiscountCollections;
-  }
-  
-  /**
-   * Whether all items in the cart are entitled to the discount.
-   */
-  export interface AllDiscountItems {
-    
-    /**
-     * Whether all items are selected. The value is hardcoded to `true`.
-     */
-    allItems: boolean;
-  }
-  
-  /**
-   * The entitled or prerequisite products and product variants for a discount.
-   */
-  export interface DiscountProducts {
-    
-    /**
-     * A list of product variants that the discount can have as a prerequisite or entitlement.
-     */
-    productVariants: ProductVariantConnection;
-    
-    /**
-     * A list of products that the discount can have as a prerequisite or entitlement.
-     */
-    products: ProductConnection;
-  }
-  
-  /**
-   * A list of collections that the discount can have as a prerequisite or entitlement.
-   */
-  export interface DiscountCollections {
-    
-    /**
-     * A list of collections that the discount can have as a prerequisite or entitlement.
-     */
-    collections: CollectionConnection;
-  }
-  
-  /**
    * The prerequisite quantity required for the discount to be applicable.
    */
   export type DiscountCustomerBuysValue =
-  DiscountQuantity |
-  DiscountPurchaseAmount;
+  DiscountPurchaseAmount |
+  DiscountQuantity;
   
   /** Use this to resolve union type DiscountCustomerBuysValue */
   export type PossibleDiscountCustomerBuysValueTypeNames =
-  'DiscountQuantity' |
-  'DiscountPurchaseAmount';
+  'DiscountPurchaseAmount' |
+  'DiscountQuantity';
   
   export interface DiscountCustomerBuysValueNameMap {
     DiscountCustomerBuysValue: DiscountCustomerBuysValue;
-    DiscountQuantity: DiscountQuantity;
     DiscountPurchaseAmount: DiscountPurchaseAmount;
-  }
-  
-  /**
-   * The quantity of items in discount.
-   */
-  export interface DiscountQuantity {
-    
-    /**
-     * The quantity of items.
-     */
-    quantity: UnsignedInt64;
+    DiscountQuantity: DiscountQuantity;
   }
   
   /**
@@ -8029,217 +8691,6 @@ export interface AppUsagePricing {
      * Decimal money amount.
      */
     amount: Decimal;
-  }
-  
-  /**
-   * The qualifying items in an order, the quantity of each one, and the total value of the discount.
-   */
-  export interface DiscountCustomerGets {
-    
-    /**
-     * The items to which the discount applies.
-     */
-    items: DiscountItems;
-    
-    /**
-     * Entitled quantity and the discount value.
-     */
-    value: DiscountCustomerGetsValue;
-  }
-  
-  /**
-   * The value of the discount and how it will be applied.
-   */
-  export type DiscountCustomerGetsValue =
-  DiscountOnQuantity |
-  DiscountAmount |
-  DiscountPercentage;
-  
-  /** Use this to resolve union type DiscountCustomerGetsValue */
-  export type PossibleDiscountCustomerGetsValueTypeNames =
-  'DiscountOnQuantity' |
-  'DiscountAmount' |
-  'DiscountPercentage';
-  
-  export interface DiscountCustomerGetsValueNameMap {
-    DiscountCustomerGetsValue: DiscountCustomerGetsValue;
-    DiscountOnQuantity: DiscountOnQuantity;
-    DiscountAmount: DiscountAmount;
-    DiscountPercentage: DiscountPercentage;
-  }
-  
-  /**
-   * The quantity of items discounted, the discount value, and how the discount will be applied.
-   */
-  export interface DiscountOnQuantity {
-    
-    /**
-     * The discount's effect on qualifying items.
-     */
-    effect: DiscountEffect;
-    
-    /**
-     * The number of items being discounted.
-     */
-    quantity: DiscountQuantity;
-  }
-  
-  /**
-   * The type of discount that will be applied. Currently, only percentage off is supported.
-   */
-  export type DiscountEffect = DiscountPercentage;
-  
-  /** Use this to resolve union type DiscountEffect */
-  export type PossibleDiscountEffectTypeNames = 'DiscountPercentage';
-  
-  export interface DiscountEffectNameMap {
-    DiscountEffect: DiscountEffect;
-    DiscountPercentage: DiscountPercentage;
-  }
-  
-  /**
-   * The percentage value of the discount.
-   */
-  export interface DiscountPercentage {
-    
-    /**
-     * The percentage value of the discount.
-     */
-    percentage: number;
-  }
-  
-  /**
-   * The fixed amount value of a discount.
-   */
-  export interface DiscountAmount {
-    
-    /**
-     * The value of the discount.
-     */
-    amount: MoneyV2;
-    
-    /**
-     * If true, then the discount is applied to each of the entitled items. If false, then the amount is split across all of the entitled items.
-     */
-    appliesOnEachItem: boolean;
-  }
-  
-  /**
-   * The status of the discount.
-   */
-  export const enum DiscountStatus {
-    
-    /**
-     * The discount is active.
-     */
-    ACTIVE = 'ACTIVE',
-    
-    /**
-     * The discount is expired.
-     */
-    EXPIRED = 'EXPIRED',
-    
-    /**
-     * The discount is scheduled.
-     */
-    SCHEDULED = 'SCHEDULED'
-  }
-  
-  /**
-   * An automatic basic discount.
-   */
-  export interface DiscountAutomaticBasic {
-    
-    /**
-     * The date and time when the discount was created.
-     */
-    createdAt: DateTime;
-    
-    /**
-     * The qualifying items in an order, the quantity of each one, and the total value of the discount.
-     */
-    customerGets: DiscountCustomerGets;
-    
-    /**
-     * The date and time when the discount ends. For open-ended discounts, use `null`.
-     */
-    endsAt?: DateTime;
-    
-    /**
-     * The minimum subtotal or quantity that's required for the discount to be applied.
-     */
-    minimumRequirement: DiscountMinimumRequirement;
-    
-    /**
-     * A short summary of the discount.
-     */
-    shortSummary: string;
-    
-    /**
-     * The date and time when the discount starts.
-     */
-    startsAt: DateTime;
-    
-    /**
-     * The status of the discount.
-     */
-    status: DiscountStatus;
-    
-    /**
-     * A detailed summary of the discount.
-     */
-    summary: string;
-    
-    /**
-     * The title of the discount.
-     */
-    title: string;
-    
-    /**
-     * The number of times that the discount has been used.
-     * @deprecated Use `asyncUsageCount` instead
-     */
-    usageCount: number;
-  }
-  
-  /**
-   * The minimum subtotal or quantity requirements for the discount.
-   */
-  export type DiscountMinimumRequirement =
-  DiscountMinimumQuantity |
-  DiscountMinimumSubtotal;
-  
-  /** Use this to resolve union type DiscountMinimumRequirement */
-  export type PossibleDiscountMinimumRequirementTypeNames =
-  'DiscountMinimumQuantity' |
-  'DiscountMinimumSubtotal';
-  
-  export interface DiscountMinimumRequirementNameMap {
-    DiscountMinimumRequirement: DiscountMinimumRequirement;
-    DiscountMinimumQuantity: DiscountMinimumQuantity;
-    DiscountMinimumSubtotal: DiscountMinimumSubtotal;
-  }
-  
-  /**
-   * The minimum quantity of items required for the discount to apply.
-   */
-  export interface DiscountMinimumQuantity {
-    
-    /**
-     * The minimum quantity of items that's required for the discount to be applied.
-     */
-    greaterThanOrEqualToQuantity: UnsignedInt64;
-  }
-  
-  /**
-   * The minimum subtotal required for the discount to apply.
-   */
-  export interface DiscountMinimumSubtotal {
-    
-    /**
-     * The minimum subtotal that's required for the discount to be applied.
-     */
-    greaterThanOrEqualToSubtotal: MoneyV2;
   }
   
   /**
@@ -8287,6 +8738,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple DiscountAutomaticNodes.
+   * 
+   */
   export interface DiscountAutomaticNodeConnection {
     
     /**
@@ -8300,6 +8755,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one DiscountAutomaticNode and a cursor during pagination.
+   * 
+   */
   export interface DiscountAutomaticNodeEdge {
     
     /**
@@ -8313,6 +8772,10 @@ export interface AppUsagePricing {
     node: DiscountAutomaticNode;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple SavedSearches.
+   * 
+   */
   export interface SavedSearchConnection {
     
     /**
@@ -8326,6 +8789,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one SavedSearch and a cursor during pagination.
+   * 
+   */
   export interface SavedSearchEdge {
     
     /**
@@ -8408,9 +8875,18 @@ export interface AppUsagePricing {
     ONLINE_STORE_ARTICLE = 'ONLINE_STORE_ARTICLE',
     COLLECTION = 'COLLECTION',
     DRAFT_ORDER = 'DRAFT_ORDER',
-    PRICE_RULE = 'PRICE_RULE'
+    PRICE_RULE = 'PRICE_RULE',
+    
+    /**
+     * A code discount redeem code.
+     */
+    DISCOUNT_REDEEM_CODE = 'DISCOUNT_REDEEM_CODE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple DiscountAutomatics.
+   * 
+   */
   export interface DiscountAutomaticConnection {
     
     /**
@@ -8424,6 +8900,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one DiscountAutomatic and a cursor during pagination.
+   * 
+   */
   export interface DiscountAutomaticEdge {
     
     /**
@@ -8557,9 +9037,19 @@ export interface AppUsagePricing {
     endsAt?: DateTime;
     
     /**
+     * Indicates whether there are any timeline comments on the discount.
+     */
+    hasTimelineComment: boolean;
+    
+    /**
      * The minimum subtotal or quantity that's required for the discount to be applied.
      */
     minimumRequirement?: DiscountMinimumRequirement;
+    
+    /**
+     * URLs that can be used to share the discount.
+     */
+    shareableUrls: Array<DiscountShareableUrl>;
     
     /**
      * A short summary of the discount.
@@ -8587,11 +9077,49 @@ export interface AppUsagePricing {
     title: string;
     
     /**
+     * The total sales from orders where the discount was used.
+     */
+    totalSales?: MoneyV2;
+    
+    /**
      * The maximum number of times that the discount can be used.
      */
     usageLimit?: number;
   }
   
+  /**
+   * The set of valid sort keys for the DiscountCode query.
+   */
+  export const enum DiscountCodeSortKeys {
+    
+    /**
+     * Sort by the `code` value.
+     */
+    CODE = 'CODE',
+    
+    /**
+     * Sort by the `created_at` value.
+     */
+    CREATED_AT = 'CREATED_AT',
+    
+    /**
+     * Sort by the `id` value.
+     */
+    ID = 'ID',
+    
+    /**
+     * During a search (i.e. when the `query` parameter has been specified on the connection) this sorts the
+     * results by relevance to the search term(s). When no search query is specified, this sort key is not
+     * deterministic and should not be used.
+     * 
+     */
+    RELEVANCE = 'RELEVANCE'
+  }
+  
+  /**
+   * An auto-generated type for paginating through multiple DiscountRedeemCodes.
+   * 
+   */
   export interface DiscountRedeemCodeConnection {
     
     /**
@@ -8605,6 +9133,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one DiscountRedeemCode and a cursor during pagination.
+   * 
+   */
   export interface DiscountRedeemCodeEdge {
     
     /**
@@ -8624,9 +9156,24 @@ export interface AppUsagePricing {
   export interface DiscountRedeemCode {
     
     /**
+     * The number of times the discount has been used. This value is updated asynchronously and can be different than the actual usage count.
+     */
+    asyncUsageCount: number;
+    
+    /**
      * The code of a discount.
      */
     code: string;
+    
+    /**
+     * The application that created the discount code.
+     */
+    createdBy?: App;
+    
+    /**
+     * Globally unique identifier of the discount redeem code.
+     */
+    id: string;
   }
   
   /**
@@ -8634,20 +9181,20 @@ export interface AppUsagePricing {
    */
   export type DiscountCustomerSelection =
   DiscountCustomerAll |
-  DiscountCustomers |
-  DiscountCustomerSavedSearches;
+  DiscountCustomerSavedSearches |
+  DiscountCustomers;
   
   /** Use this to resolve union type DiscountCustomerSelection */
   export type PossibleDiscountCustomerSelectionTypeNames =
   'DiscountCustomerAll' |
-  'DiscountCustomers' |
-  'DiscountCustomerSavedSearches';
+  'DiscountCustomerSavedSearches' |
+  'DiscountCustomers';
   
   export interface DiscountCustomerSelectionNameMap {
     DiscountCustomerSelection: DiscountCustomerSelection;
     DiscountCustomerAll: DiscountCustomerAll;
-    DiscountCustomers: DiscountCustomers;
     DiscountCustomerSavedSearches: DiscountCustomerSavedSearches;
+    DiscountCustomers: DiscountCustomers;
   }
   
   /**
@@ -8659,6 +9206,17 @@ export interface AppUsagePricing {
      * Always true when resolved to this type.
      */
     allCustomers: boolean;
+  }
+  
+  /**
+   * A list of customer saved searches that contain the customers to whom the discount applies.
+   */
+  export interface DiscountCustomerSavedSearches {
+    
+    /**
+     * A list of customer saved searches that contain the customers who can use the discount.
+     */
+    savedSearches: Array<SavedSearch>;
   }
   
   /**
@@ -8816,6 +9374,11 @@ export interface AppUsagePricing {
     metafields: MetafieldConnection;
     
     /**
+     * A unique identifier for the customer that's used with Multipass login.
+     */
+    multipassIdentifier?: string;
+    
+    /**
      * A note about the customer.
      */
     note?: string;
@@ -8852,7 +9415,7 @@ export interface AppUsagePricing {
     state: CustomerState;
     
     /**
-     * A list of tags assigned to the customer.
+     * A comma separated list of tags that have been added to the customer.
      */
     tags: Array<string>;
     
@@ -8889,7 +9452,7 @@ export interface AppUsagePricing {
     validEmailAddress: boolean;
     
     /**
-     * Whether the customer has verified their email address.
+     * Whether the customer has verified their email address. Defaults to `true` if the customer is created through the Shopify admin or API.
      */
     verifiedEmail: boolean;
   }
@@ -9051,7 +9614,7 @@ export interface AppUsagePricing {
   /**
    * An order represents an agreement to do business between a customer and a merchant.
    */
-  export interface Order extends Node, CommentEventSubject, HasMetafields, LegacyInteroperability, HasEvents {
+  export interface Order extends Node, CommentEventSubject, HasMetafields, LegacyInteroperability, HasEvents, HasLocalizationExtensions {
     
     /**
      * Generated messages that appear at the top of an order page in the Shopify admin.
@@ -9155,9 +9718,49 @@ export interface AppUsagePricing {
     currencyCode: CurrencyCode;
     
     /**
-     * Total amount of duties for the order. If duties are not applicable, then this value is `null`.
+     * The amount of the order-level discount minus the amounts for line items that have been returned. This doesn't include line item discounts.
+     */
+    currentCartDiscountAmountSet: MoneyBag;
+    
+    /**
+     * The sum of the quantities for the line items that contribute to the order's subtotal.
+     */
+    currentSubtotalLineItemsQuantity: number;
+    
+    /**
+     * The subtotal of line items and their discounts minus the line items that have been returned. This includes order-level discounts, unless the argument with_cart_discount is set to false. This doesn't include shipping costs and shipping discounts. Taxes are not included unless the order is a taxes-included order.
+     */
+    currentSubtotalPriceSet: MoneyBag;
+    
+    /**
+     * The taxes charged for the order minus the taxes for line items that have been returned.
+     */
+    currentTaxLines: Array<TaxLine>;
+    
+    /**
+     * The total amount discounted from the order (including order-level and line item discounts) minus the amounts for items that have been returned.
+     */
+    currentTotalDiscountsSet: MoneyBag;
+    
+    /**
+     * The total amount of duties for the order. If duties aren't applicable, then this value is `null`.
      */
     currentTotalDutiesSet?: MoneyBag;
+    
+    /**
+     * The total amount of the order (including taxes and discounts) minus the amounts for line items that have been returned.
+     */
+    currentTotalPriceSet: MoneyBag;
+    
+    /**
+     * The total of all taxes applied to the order minus the taxes for line items that have been returned.
+     */
+    currentTotalTaxSet: MoneyBag;
+    
+    /**
+     * The total weight (grams) of the order minus the weights for line items that have been returned.
+     */
+    currentTotalWeight: UnsignedInt64;
     
     /**
      * Custom information added to the order by your customer
@@ -9181,8 +9784,16 @@ export interface AppUsagePricing {
     /**
      * Description of the customer's experience with the store leading up to the order.
      * 
+     * @deprecated Use `customerJourneySummary` instead
      */
     customerJourney?: CustomerJourney;
+    
+    /**
+     * Description of the customer's experience with the store leading up to the order.
+     * Loaded asynchronously, consumers should poll until the 'ready' field resolves to true.
+     * 
+     */
+    customerJourneySummary?: CustomerJourneySummary;
     
     /**
      * A two-letter or three-letter language code, optionally followed by a region modifier.
@@ -9228,6 +9839,7 @@ export interface AppUsagePricing {
     /**
      * List of possible fulfilments that can be made for the order (includes line items that can be partially fulfilled).
      * 
+     * @deprecated Use `fulfillmentOrders` instead
      */
     draftFulfillments: Array<DraftFulfillment>;
     
@@ -9280,13 +9892,13 @@ export interface AppUsagePricing {
     
     /**
      * First page of the online store that the customer visited before they submitted the order, for displaying to humans.
-     * @deprecated Use `customerJourney.lastVisit.landingPageHtml` instead
+     * @deprecated Use `customerJourneySummary.lastVisit.landingPageHtml` instead
      */
     landingPageDisplayText?: string;
     
     /**
      * First page of the online store that the customer visited before they submitted the order.
-     * @deprecated Use `customerJourney.lastVisit.landingPage` instead
+     * @deprecated Use `customerJourneySummary.lastVisit.landingPage` instead
      */
     landingPageUrl?: URL;
     
@@ -9302,8 +9914,14 @@ export interface AppUsagePricing {
     
     /**
      * List of the order's line items after any edits. Only available on Developer Preview.
+     * @deprecated Use `lineItems` instead
      */
     lineItemsMutable: LineItemMutableConnection;
+    
+    /**
+     * List of localization extensions for the resource.
+     */
+    localizationExtensions: LocalizationExtensionConnection;
     
     /**
      * If the order was processed using Shopify POS, then this is its location as provided by the merchant.
@@ -9316,6 +9934,11 @@ export interface AppUsagePricing {
      * Whether the order can be edited or not.
      */
     merchantEditable: boolean;
+    
+    /**
+     * A list of reasons of why the order cannot be edited.
+     */
+    merchantEditableErrors: Array<string>;
     
     /**
      * The metafield associated with the resource.
@@ -9362,7 +9985,7 @@ export interface AppUsagePricing {
     note?: string;
     
     /**
-     * Total amount of duties prior to any applied edits for the order. If duties are not applicable, then this value is `null`.
+     * The total amount of duties prior to any applied edits for the order. If duties aren't applicable, then this value is `null`.
      */
     originalTotalDutiesSet?: MoneyBag;
     
@@ -9425,14 +10048,14 @@ export interface AppUsagePricing {
      * Marketing referral code from the link that the customer clicked to visit your store.
      * Supports the following URL attributes: _ref_, _source_, or _r_. For example, if the URL is myshopifystore.com/products/slide?ref=j2tj1tn2, then this value is j2tj1tn2.
      * 
-     * @deprecated Use `customerJourney.lastVisit.referralCode` instead
+     * @deprecated Use `customerJourneySummary.lastVisit.referralCode` instead
      */
     referralCode?: string;
     
     /**
      * Website that sent the customer to your online store.
      * 
-     * @deprecated Use `customerJourney.lastVisit.referralInfoHtml` instead
+     * @deprecated Use `customerJourneySummary.lastVisit.referralInfoHtml` instead
      */
     referrerDisplayText?: string;
     
@@ -9440,7 +10063,7 @@ export interface AppUsagePricing {
      * Webpage where the customer clicked a link that sent them to your online store.
      * For example, _Google_ or _randomblog.com/page1_.
      * 
-     * @deprecated Use `customerJourney.lastVisit.referrerUrl` instead
+     * @deprecated Use `customerJourneySummary.lastVisit.referrerUrl` instead
      */
     referrerUrl?: URL;
     
@@ -9494,6 +10117,11 @@ export interface AppUsagePricing {
     shippingLine?: ShippingLine;
     
     /**
+     * List of line items that contains the shipping costs.
+     */
+    shippingLines: ShippingLineConnection;
+    
+    /**
      * The sum of the quantities for the line items that contribute to the order's subtotal.
      */
     subtotalLineItemsQuantity: number;
@@ -9516,7 +10144,11 @@ export interface AppUsagePricing {
     suggestedRefund?: SuggestedRefund;
     
     /**
-     * List of tags.
+     * A comma separated list of tags associated with the order. Updating `tags` overwrites
+     * any existing tags that were previously added to the order. To add new tags without overwriting
+     * existing tags, use the [tagsAdd](https://shopify.dev/docs/admin-api/graphql/reference/common-objects/tagsadd)
+     * mutation.
+     * 
      */
     tags: Array<string>;
     
@@ -9625,6 +10257,12 @@ export interface AppUsagePricing {
     totalTaxSet?: MoneyBag;
     
     /**
+     * Total tip amount received for the order.
+     * @deprecated Use `totalTipReceivedSet` instead
+     */
+    totalTipReceived: MoneyV2;
+    
+    /**
      * Total weight (grams) of the order.
      */
     totalWeight?: UnsignedInt64;
@@ -9645,6 +10283,102 @@ export interface AppUsagePricing {
      * Date and time when the order was last modified.
      */
     updatedAt: DateTime;
+  }
+  
+  /**
+   * Localization extensions associated with the specified resource. For example, the tax id for government invoice.
+   * 
+   */
+  export interface HasLocalizationExtensions {
+    
+    /**
+     * List of localization extensions for the resource.
+     */
+    localizationExtensions: LocalizationExtensionConnection;
+  }
+  
+  /** Use this to resolve interface type HasLocalizationExtensions */
+  export type PossibleHasLocalizationExtensionsTypeNames = 'Order';
+  
+  export interface HasLocalizationExtensionsNameMap {
+    HasLocalizationExtensions: HasLocalizationExtensions;
+    Order: Order;
+  }
+  
+  /**
+   * The purpose of a localization extension.
+   */
+  export const enum LocalizationExtensionPurpose {
+    
+    /**
+     * Extensions that are used for shipping purposes, for example, customs clearance.
+     */
+    SHIPPING = 'SHIPPING',
+    
+    /**
+     * Extensions that are used for taxes purposes, for example, invoicing.
+     */
+    TAX = 'TAX'
+  }
+  
+  /**
+   * An auto-generated type for paginating through multiple LocalizationExtensions.
+   * 
+   */
+  export interface LocalizationExtensionConnection {
+    
+    /**
+     * A list of edges.
+     */
+    edges: Array<LocalizationExtensionEdge>;
+    
+    /**
+     * Information to aid in pagination.
+     */
+    pageInfo: PageInfo;
+  }
+  
+  /**
+   * An auto-generated type which holds one LocalizationExtension and a cursor during pagination.
+   * 
+   */
+  export interface LocalizationExtensionEdge {
+    
+    /**
+     * A cursor for use in pagination.
+     */
+    cursor: string;
+    
+    /**
+     * The item at the end of LocalizationExtensionEdge.
+     */
+    node: LocalizationExtension;
+  }
+  
+  /**
+   * Represents the value captured by a localization extension, like a tax id.
+   */
+  export interface LocalizationExtension {
+    
+    /**
+     * Country ISO 3166-1 alpha-2 code.
+     */
+    countryCode: CountryCode;
+    
+    /**
+     * The purpose of this localization extension.
+     */
+    purpose: LocalizationExtensionPurpose;
+    
+    /**
+     * The localized extension title.
+     */
+    title: string;
+    
+    /**
+     * The value of the field.
+     */
+    value: string;
   }
   
   /**
@@ -9814,6 +10548,38 @@ export interface AppUsagePricing {
      * Amount in shop currency.
      */
     shopMoney: MoneyV2;
+  }
+  
+  /**
+   * Represents the information about the tax charged on the associated line item.
+   */
+  export interface TaxLine {
+    
+    /**
+     * The amount of tax to be charged.
+     * @deprecated Use `priceSet` instead
+     */
+    price: Money;
+    
+    /**
+     * The amount of tax to be charged in shop and presentment currencies.
+     */
+    priceSet: MoneyBag;
+    
+    /**
+     * The tax rate to be applied.
+     */
+    rate?: number;
+    
+    /**
+     * The percentage of the price that the tax rate represents.
+     */
+    ratePercentage?: number;
+    
+    /**
+     * The name of the tax.
+     */
+    title: string;
   }
   
   /**
@@ -10217,6 +10983,85 @@ export interface AppUsagePricing {
     term?: string;
   }
   
+  /**
+   * Represents a customer's activity on a shop's online store.
+   */
+  export interface CustomerJourneySummary {
+    
+    /**
+     * The position of the current order within the customer's order history. Test orders aren't included.
+     */
+    customerOrderIndex?: number;
+    
+    /**
+     * The number of days between the first session and the order creation date. The first session represents the first session since the last order, or the first session within the 30 day attribution window, if more than 30 days have passed since the last order.
+     */
+    daysToConversion?: number;
+    
+    /**
+     * The customer's first session going into the shop.
+     */
+    firstVisit?: CustomerVisit;
+    
+    /**
+     * The last session before an order is made.
+     */
+    lastVisit?: CustomerVisit;
+    
+    /**
+     * The events preceding a customer order, such as shop sessions.
+     */
+    moments?: CustomerMomentConnection;
+    
+    /**
+     * The total number of customer moments associated with this order. Returns null if the order is still in the process of being attributed.
+     */
+    momentsCount?: number;
+    
+    /**
+     * Whether or not the attributed sessions for the order have been created yet.
+     */
+    ready: boolean;
+  }
+  
+  /**
+   * An auto-generated type for paginating through multiple CustomerMoments.
+   * 
+   */
+  export interface CustomerMomentConnection {
+    
+    /**
+     * A list of edges.
+     */
+    edges: Array<CustomerMomentEdge>;
+    
+    /**
+     * Information to aid in pagination.
+     */
+    pageInfo: PageInfo;
+  }
+  
+  /**
+   * An auto-generated type which holds one CustomerMoment and a cursor during pagination.
+   * 
+   */
+  export interface CustomerMomentEdge {
+    
+    /**
+     * A cursor for use in pagination.
+     */
+    cursor: string;
+    
+    /**
+     * The item at the end of CustomerMomentEdge.
+     */
+    node: CustomerMoment;
+  }
+  
+  /**
+   * An auto-generated type for paginating through multiple DiscountApplications.
+   * 
+   */
   export interface DiscountApplicationConnection {
     
     /**
@@ -10230,6 +11075,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one DiscountApplication and a cursor during pagination.
+   * 
+   */
   export interface DiscountApplicationEdge {
     
     /**
@@ -10310,6 +11159,7 @@ export interface AppUsagePricing {
     
     /**
      * The value is specifically applied onto a particular line.
+     * @deprecated Use ACROSS instead.
      */
     ONE = 'ONE'
   }
@@ -10357,17 +11207,17 @@ export interface AppUsagePricing {
   /**
    * The value of the pricing object.
    */
-  export type PricingValue = PricingPercentageValue | MoneyV2;
+  export type PricingValue = MoneyV2 | PricingPercentageValue;
   
   /** Use this to resolve union type PricingValue */
   export type PossiblePricingValueTypeNames =
-  'PricingPercentageValue' |
-  'MoneyV2';
+  'MoneyV2' |
+  'PricingPercentageValue';
   
   export interface PricingValueNameMap {
     PricingValue: PricingValue;
-    PricingPercentageValue: PricingPercentageValue;
     MoneyV2: MoneyV2;
+    PricingPercentageValue: PricingPercentageValue;
   }
   
   /**
@@ -10662,7 +11512,7 @@ export interface AppUsagePricing {
     product?: Product;
     
     /**
-     * Number of variant items ordered.
+     * The number of variant items ordered.
      */
     quantity: number;
     
@@ -10810,37 +11660,9 @@ export interface AppUsagePricing {
   }
   
   /**
-   * Represents the information about the tax charged on the associated line item.
+   * An auto-generated type for paginating through multiple FulfillmentOrders.
+   * 
    */
-  export interface TaxLine {
-    
-    /**
-     * The amount of tax to be charged.
-     * @deprecated Use `priceSet` instead
-     */
-    price: Money;
-    
-    /**
-     * The amount of tax to be charged in shop and presentment currencies.
-     */
-    priceSet: MoneyBag;
-    
-    /**
-     * The tax rate to be applied.
-     */
-    rate?: number;
-    
-    /**
-     * The percentage of the price that the tax rate represents.
-     */
-    ratePercentage?: number;
-    
-    /**
-     * The name of the tax.
-     */
-    title: string;
-  }
-  
   export interface FulfillmentOrderConnection {
     
     /**
@@ -10854,6 +11676,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one FulfillmentOrder and a cursor during pagination.
+   * 
+   */
   export interface FulfillmentOrderEdge {
     
     /**
@@ -10879,6 +11705,11 @@ export interface AppUsagePricing {
      * The fulfillment order's assigned location. This is the location expected to perform fulfillment.
      */
     assignedLocation: FulfillmentOrderAssignedLocation;
+    
+    /**
+     * Delivery method of this fulfillment order.
+     */
+    deliveryMethod?: DeliveryMethod;
     
     /**
      * The destination where the items should be sent.
@@ -10988,6 +11819,53 @@ export interface AppUsagePricing {
   }
   
   /**
+   * Delivery method.
+   */
+  export interface DeliveryMethod extends Node {
+    
+    /**
+     * Globally unique identifier.
+     */
+    id: string;
+    
+    /**
+     * The type of the delivery method.
+     */
+    methodType: DeliveryMethodType;
+  }
+  
+  /**
+   * Possible method types that a delivery method can have.
+   */
+  export const enum DeliveryMethodType {
+    
+    /**
+     * Shipping delivery method.
+     */
+    SHIPPING = 'SHIPPING',
+    
+    /**
+     * Pick-up delivery method.
+     */
+    PICK_UP = 'PICK_UP',
+    
+    /**
+     * No delivery method.
+     */
+    NONE = 'NONE',
+    
+    /**
+     * Retail delivery method represents items delivered immediately in a retail store.
+     */
+    RETAIL = 'RETAIL',
+    
+    /**
+     * Local delivery method.
+     */
+    LOCAL = 'LOCAL'
+  }
+  
+  /**
    * Represents the destination where the items should be sent upon fulfillment.
    * 
    */
@@ -11054,6 +11932,10 @@ export interface AppUsagePricing {
     zip?: string;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple Fulfillments.
+   * 
+   */
   export interface FulfillmentConnection {
     
     /**
@@ -11067,6 +11949,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one Fulfillment and a cursor during pagination.
+   * 
+   */
   export interface FulfillmentEdge {
     
     /**
@@ -11290,6 +12176,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple FulfillmentEvents.
+   * 
+   */
   export interface FulfillmentEventConnection {
     
     /**
@@ -11303,6 +12193,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one FulfillmentEvent and a cursor during pagination.
+   * 
+   */
   export interface FulfillmentEventEdge {
     
     /**
@@ -11388,6 +12282,10 @@ export interface AppUsagePricing {
     FAILURE = 'FAILURE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple FulfillmentLineItems.
+   * 
+   */
   export interface FulfillmentLineItemConnection {
     
     /**
@@ -11401,6 +12299,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one FulfillmentLineItem and a cursor during pagination.
+   * 
+   */
   export interface FulfillmentLineItemEdge {
     
     /**
@@ -11516,6 +12418,10 @@ export interface AppUsagePricing {
     url?: URL;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple FulfillmentOrderLineItems.
+   * 
+   */
   export interface FulfillmentOrderLineItemConnection {
     
     /**
@@ -11529,6 +12435,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one FulfillmentOrderLineItem and a cursor during pagination.
+   * 
+   */
   export interface FulfillmentOrderLineItemEdge {
     
     /**
@@ -11569,6 +12479,10 @@ export interface AppUsagePricing {
     totalQuantity: number;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple FulfillmentOrderLocationForMoves.
+   * 
+   */
   export interface FulfillmentOrderLocationForMoveConnection {
     
     /**
@@ -11582,6 +12496,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one FulfillmentOrderLocationForMove and a cursor during pagination.
+   * 
+   */
   export interface FulfillmentOrderLocationForMoveEdge {
     
     /**
@@ -11637,6 +12555,10 @@ export interface AppUsagePricing {
     CANCELLATION_REQUEST = 'CANCELLATION_REQUEST'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple FulfillmentOrderMerchantRequests.
+   * 
+   */
   export interface FulfillmentOrderMerchantRequestConnection {
     
     /**
@@ -11650,6 +12572,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one FulfillmentOrderMerchantRequest and a cursor during pagination.
+   * 
+   */
   export interface FulfillmentOrderMerchantRequestEdge {
     
     /**
@@ -11766,7 +12692,7 @@ export interface AppUsagePricing {
   export const enum FulfillmentOrderStatus {
     
     /**
-     * The default state for newly created fulfillment orders.
+     * The fulfillment order has been opened.
      */
     OPEN = 'OPEN',
     
@@ -11844,6 +12770,10 @@ export interface AppUsagePricing {
     EXTERNAL = 'EXTERNAL'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple LineItems.
+   * 
+   */
   export interface LineItemConnection {
     
     /**
@@ -11857,6 +12787,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one LineItem and a cursor during pagination.
+   * 
+   */
   export interface LineItemEdge {
     
     /**
@@ -11870,6 +12804,10 @@ export interface AppUsagePricing {
     node: LineItem;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple LineItemMutables.
+   * 
+   */
   export interface LineItemMutableConnection {
     
     /**
@@ -11883,6 +12821,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one LineItemMutable and a cursor during pagination.
+   * 
+   */
   export interface LineItemMutableEdge {
     
     /**
@@ -12129,7 +13071,7 @@ export interface AppUsagePricing {
     createdAt?: DateTime;
     
     /**
-     * List of the order's refunded duties.
+     * A list of the order's refunded duties.
      */
     duties?: Array<RefundDuty>;
     
@@ -12149,15 +13091,14 @@ export interface AppUsagePricing {
     note?: string;
     
     /**
+     * The order associated with the refund.
+     */
+    order: Order;
+    
+    /**
      * The RefundLineItem resources attached to the refund.
      */
     refundLineItems: RefundLineItemConnection;
-    
-    /**
-     * Whether the RefundLineItem resources were restocked when the refund was created.
-     * @deprecated Use `RefundLineItem.restockType` instead.
-     */
-    restocked: boolean;
     
     /**
      * Total amount refunded across all the transactions for this refund.
@@ -12197,6 +13138,10 @@ export interface AppUsagePricing {
     originalDuty?: Duty;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple RefundLineItems.
+   * 
+   */
   export interface RefundLineItemConnection {
     
     /**
@@ -12210,6 +13155,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one RefundLineItem and a cursor during pagination.
+   * 
+   */
   export interface RefundLineItemEdge {
     
     /**
@@ -12256,12 +13205,6 @@ export interface AppUsagePricing {
     
     /**
      * Represents the type of restock for the refunded line item.
-     * @deprecated Use `restockType` instead
-     */
-    refundType: RefundLineItemRefundType;
-    
-    /**
-     * Represents the type of restock for the refunded line item.
      */
     restockType: RefundLineItemRestockType;
     
@@ -12296,32 +13239,6 @@ export interface AppUsagePricing {
   /**
    * The type of restock performed for a particular refund line item.
    */
-  export const enum RefundLineItemRefundType {
-    
-    /**
-     * Refund line item was returned.
-     */
-    RETURN = 'RETURN',
-    
-    /**
-     * Refund line item was canceled.
-     */
-    CANCEL = 'CANCEL',
-    
-    /**
-     * Refund line item was restocked, without specifically being identified as a return or cancelation.
-     */
-    LEGACY_RESTOCK = 'LEGACY_RESTOCK',
-    
-    /**
-     * Refund line item was not restocked.
-     */
-    NO_RESTOCK = 'NO_RESTOCK'
-  }
-  
-  /**
-   * The type of restock performed for a particular refund line item.
-   */
   export const enum RefundLineItemRestockType {
     
     /**
@@ -12345,6 +13262,10 @@ export interface AppUsagePricing {
     NO_RESTOCK = 'NO_RESTOCK'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple OrderTransactions.
+   * 
+   */
   export interface OrderTransactionConnection {
     
     /**
@@ -12358,6 +13279,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one OrderTransaction and a cursor during pagination.
+   * 
+   */
   export interface OrderTransactionEdge {
     
     /**
@@ -12912,6 +13837,40 @@ export interface AppUsagePricing {
   }
   
   /**
+   * An auto-generated type for paginating through multiple ShippingLines.
+   * 
+   */
+  export interface ShippingLineConnection {
+    
+    /**
+     * A list of edges.
+     */
+    edges: Array<ShippingLineEdge>;
+    
+    /**
+     * Information to aid in pagination.
+     */
+    pageInfo: PageInfo;
+  }
+  
+  /**
+   * An auto-generated type which holds one ShippingLine and a cursor during pagination.
+   * 
+   */
+  export interface ShippingLineEdge {
+    
+    /**
+     * A cursor for use in pagination.
+     */
+    cursor: string;
+    
+    /**
+     * The item at the end of ShippingLineEdge.
+     */
+    node: ShippingLine;
+  }
+  
+  /**
    * Specifies the fields required to return line items on a refund.
    */
   export interface RefundLineItemInput {
@@ -13038,7 +13997,7 @@ export interface AppUsagePricing {
     totalCartDiscountAmountSet: MoneyBag;
     
     /**
-     * The sum of all the duties being refunded from the order (must be positive) in shop and presentment currencies.
+     * The sum of all the duties being refunded from the order in shop and presentment currencies. Must be positive.
      */
     totalDutiesSet: MoneyBag;
     
@@ -13247,6 +14206,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple Orders.
+   * 
+   */
   export interface OrderConnection {
     
     /**
@@ -13260,6 +14223,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one Order and a cursor during pagination.
+   * 
+   */
   export interface OrderEdge {
     
     /**
@@ -13406,14 +14373,50 @@ export interface AppUsagePricing {
   }
   
   /**
-   * A list of customer saved searches that contain the customers to whom the discount applies.
+   * The shareable URL for the discount code.
    */
-  export interface DiscountCustomerSavedSearches {
+  export interface DiscountShareableUrl {
     
     /**
-     * A list of customer saved searches that contain the customers who can use the discount.
+     * The image URL of the item (product or collection) to which the discount applies.
      */
-    savedSearches: Array<SavedSearch>;
+    targetItemImage?: Image;
+    
+    /**
+     * The type of page that's associated with the URL.
+     */
+    targetType: DiscountShareableUrlTargetType;
+    
+    /**
+     * The title of the page that's associated with the URL.
+     */
+    title: string;
+    
+    /**
+     * The URL for the discount code.
+     */
+    url: URL;
+  }
+  
+  /**
+   * The page type where shareable URL lands.
+   */
+  export const enum DiscountShareableUrlTargetType {
+    
+    /**
+     * The home page type.
+     */
+    HOME = 'HOME',
+    
+    /**
+     * The product page type.
+     */
+    PRODUCT = 'PRODUCT',
+    
+    /**
+     * The collection page type.
+     */
+    COLLECTION = 'COLLECTION'
   }
   
   /**
@@ -13467,6 +14470,16 @@ export interface AppUsagePricing {
     endsAt?: DateTime;
     
     /**
+     * Indicates whether there are any timeline comments on the discount.
+     */
+    hasTimelineComment: boolean;
+    
+    /**
+     * URLs that can be used to share the discount.
+     */
+    shareableUrls: Array<DiscountShareableUrl>;
+    
+    /**
      * The date and time when the discount starts.
      */
     startsAt: DateTime;
@@ -13485,6 +14498,11 @@ export interface AppUsagePricing {
      * The title of the discount.
      */
     title: string;
+    
+    /**
+     * The total sales from orders where the discount was used.
+     */
+    totalSales?: MoneyV2;
     
     /**
      * The maximum number of times that the discount can be used.
@@ -13543,9 +14561,24 @@ export interface AppUsagePricing {
     endsAt?: DateTime;
     
     /**
+     * Indicates whether there are any timeline comments on the discount.
+     */
+    hasTimelineComment: boolean;
+    
+    /**
+     * The maximum shipping price amount accepted to qualify for the discount.
+     */
+    maximumShippingPrice?: MoneyV2;
+    
+    /**
      * The minimum subtotal or quantity that's required for the discount to be applied.
      */
     minimumRequirement?: DiscountMinimumRequirement;
+    
+    /**
+     * URLs that can be used to share the discount.
+     */
+    shareableUrls: Array<DiscountShareableUrl>;
     
     /**
      * A short summary of the discount.
@@ -13573,6 +14606,11 @@ export interface AppUsagePricing {
     title: string;
     
     /**
+     * The total sales from orders where the discount was used.
+     */
+    totalSales?: MoneyV2;
+    
+    /**
      * The maximum number of times that the discount can be used.
      */
     usageLimit?: number;
@@ -13582,29 +14620,18 @@ export interface AppUsagePricing {
    * The selection of shipping countries to which this discount applies.
    */
   export type DiscountShippingDestinationSelection =
-  DiscountCountryAll |
-  DiscountCountries;
+  DiscountCountries |
+  DiscountCountryAll;
   
   /** Use this to resolve union type DiscountShippingDestinationSelection */
   export type PossibleDiscountShippingDestinationSelectionTypeNames =
-  'DiscountCountryAll' |
-  'DiscountCountries';
+  'DiscountCountries' |
+  'DiscountCountryAll';
   
   export interface DiscountShippingDestinationSelectionNameMap {
     DiscountShippingDestinationSelection: DiscountShippingDestinationSelection;
-    DiscountCountryAll: DiscountCountryAll;
     DiscountCountries: DiscountCountries;
-  }
-  
-  /**
-   * Whether the discount applies to all countries.
-   */
-  export interface DiscountCountryAll {
-    
-    /**
-     * Always true when resolved to this type.
-     */
-    allCountries: boolean;
+    DiscountCountryAll: DiscountCountryAll;
   }
   
   /**
@@ -13621,6 +14648,17 @@ export interface AppUsagePricing {
      * Whether the discount is applicable to countries that have not been defined in the shop's shipping zones.
      */
     includeRestOfWorld: boolean;
+  }
+  
+  /**
+   * Whether the discount applies to all countries.
+   */
+  export interface DiscountCountryAll {
+    
+    /**
+     * Always true when resolved to this type.
+     */
+    allCountries: boolean;
   }
   
   /**
@@ -13667,6 +14705,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple DiscountCodeNodes.
+   * 
+   */
   export interface DiscountCodeNodeConnection {
     
     /**
@@ -13680,6 +14722,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one DiscountCodeNode and a cursor during pagination.
+   * 
+   */
   export interface DiscountCodeNodeEdge {
     
     /**
@@ -13770,6 +14816,14 @@ export interface AppUsagePricing {
      * GraphQL query document specified in `bulkOperationRunQuery`.
      */
     query: string;
+    
+    /**
+     * The running count of all objects processed at the root of the query.
+     * For example, when fetching all products and their variants, this field counts only products.
+     * This field can be used to track operation progress.
+     * 
+     */
+    rootObjectCount: UnsignedInt64;
     
     /**
      * Status of the bulk operation.
@@ -13925,6 +14979,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple Customers.
+   * 
+   */
   export interface CustomerConnection {
     
     /**
@@ -13938,6 +14996,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one Customer and a cursor during pagination.
+   * 
+   */
   export interface CustomerEdge {
     
     /**
@@ -13983,6 +15045,10 @@ export interface AppUsagePricing {
     PRODUCT = 'PRODUCT'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple DeletionEvents.
+   * 
+   */
   export interface DeletionEventConnection {
     
     /**
@@ -13996,6 +15062,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one DeletionEvent and a cursor during pagination.
+   * 
+   */
   export interface DeletionEventEdge {
     
     /**
@@ -14033,6 +15103,10 @@ export interface AppUsagePricing {
     subjectType: DeletionEventSubjectType;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple DeliveryProfiles.
+   * 
+   */
   export interface DeliveryProfileConnection {
     
     /**
@@ -14046,6 +15120,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one DeliveryProfile and a cursor during pagination.
+   * 
+   */
   export interface DeliveryProfileEdge {
     
     /**
@@ -14123,6 +15201,11 @@ export interface AppUsagePricing {
     id: string;
     
     /**
+     * The localization of the domain, if it does not redirect.
+     */
+    localization?: DomainLocalization;
+    
+    /**
      * Whether SSL is enabled or not.
      */
     sslEnabled: boolean;
@@ -14131,6 +15214,27 @@ export interface AppUsagePricing {
      * The URL of the domain (eg: `https://example.com`).
      */
     url: URL;
+  }
+  
+  /**
+   * The country and language settings assigned to a domain.
+   */
+  export interface DomainLocalization {
+    
+    /**
+     * The ISO codes for the domain’s alternate locales.
+     */
+    alternateLocales: Array<string>;
+    
+    /**
+     * The ISO code for the country assigned to the domain, or "*" for a domain set to "Rest of world".
+     */
+    country?: string;
+    
+    /**
+     * The ISO code for the domain’s default locale.
+     */
+    defaultLocale: string;
   }
   
   /**
@@ -14145,7 +15249,7 @@ export interface AppUsagePricing {
     appliedDiscount?: DraftOrderAppliedDiscount;
     
     /**
-     * Billing address of the customer.
+     * The billing address of the customer.
      * 
      */
     billingAddress?: MailingAddress;
@@ -14256,7 +15360,13 @@ export interface AppUsagePricing {
     privateMetafields: PrivateMetafieldConnection;
     
     /**
-     * Shipping mailing address of the customer.
+     * Whether or not the Draft Order is ready and can be completed. Draft Orders
+     *         may have asynchronous operations that can take time to finish.
+     */
+    ready: boolean;
+    
+    /**
+     * The shipping address of the customer.
      */
     shippingAddress?: MailingAddress;
     
@@ -14277,7 +15387,11 @@ export interface AppUsagePricing {
     subtotalPrice: Money;
     
     /**
-     * Tags added to the draft order.
+     * A comma separated list of tags associated with the draft order. Updating `tags` overwrites
+     * any existing tags that were previously added to the draft order. To add new tags without overwriting
+     * existing tags, use the [tagsAdd](https://shopify.dev/docs/admin-api/graphql/reference/common-objects/tagsadd)
+     * mutation.
+     * 
      */
     tags: Array<string>;
     
@@ -14379,6 +15493,10 @@ export interface AppUsagePricing {
     PERCENTAGE = 'PERCENTAGE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple DraftOrderLineItems.
+   * 
+   */
   export interface DraftOrderLineItemConnection {
     
     /**
@@ -14392,6 +15510,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one DraftOrderLineItem and a cursor during pagination.
+   * 
+   */
   export interface DraftOrderLineItemEdge {
     
     /**
@@ -14617,6 +15739,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple DraftOrders.
+   * 
+   */
   export interface DraftOrderConnection {
     
     /**
@@ -14630,6 +15756,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one DraftOrder and a cursor during pagination.
+   * 
+   */
   export interface DraftOrderEdge {
     
     /**
@@ -14643,6 +15773,10 @@ export interface AppUsagePricing {
     node: DraftOrder;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple InventoryItems.
+   * 
+   */
   export interface InventoryItemConnection {
     
     /**
@@ -14656,6 +15790,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one InventoryItem and a cursor during pagination.
+   * 
+   */
   export interface InventoryItemEdge {
     
     /**
@@ -14719,6 +15857,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple MarketingActivities.
+   * 
+   */
   export interface MarketingActivityConnection {
     
     /**
@@ -14732,6 +15874,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one MarketingActivity and a cursor during pagination.
+   * 
+   */
   export interface MarketingActivityEdge {
     
     /**
@@ -14781,6 +15927,11 @@ export interface AppUsagePricing {
     createdAt: DateTime;
     
     /**
+     * The form data of the marketing activity.
+     */
+    formData?: string;
+    
+    /**
      * Globally unique identifier.
      */
     id: string;
@@ -14804,6 +15955,16 @@ export interface AppUsagePricing {
      * Status helps to identify if this marketing activity has been completed, queued, failed etc.
      */
     status: MarketingActivityStatus;
+    
+    /**
+     * StatusBadgeType helps to identify the color of the status badge.
+     */
+    statusBadgeType?: MarketingActivityStatusBadgeType;
+    
+    /**
+     * Status label to describe the status of the marketing activity.
+     */
+    statusLabel: string;
     
     /**
      * The [date and time](
@@ -14944,6 +16105,11 @@ export interface AppUsagePricing {
     DISCONNECTED = 'DISCONNECTED',
     
     /**
+     * This marketing activity is started but not yet created.
+     */
+    DRAFT = 'DRAFT',
+    
+    /**
      * This marketing activity is unable to run.
      */
     FAILED = 'FAILED',
@@ -14975,6 +16141,37 @@ export interface AppUsagePricing {
   }
   
   /**
+   * StatusBadgeType helps to identify the color of the status badge.
+   */
+  export const enum MarketingActivityStatusBadgeType {
+    
+    /**
+     * This status badge has type default.
+     */
+    DEFAULT = 'DEFAULT',
+    
+    /**
+     * This status badge has type success.
+     */
+    SUCCESS = 'SUCCESS',
+    
+    /**
+     * This status badge has type attention.
+     */
+    ATTENTION = 'ATTENTION',
+    
+    /**
+     * This status badge has type warning.
+     */
+    WARNING = 'WARNING',
+    
+    /**
+     * This status badge has type info.
+     */
+    INFO = 'INFO'
+  }
+  
+  /**
    * The set of valid sort keys for the MarketingEvent query.
    */
   export const enum MarketingEventSortKeys {
@@ -14998,6 +16195,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple MarketingEvents.
+   * 
+   */
   export interface MarketingEventConnection {
     
     /**
@@ -15011,6 +16212,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one MarketingEvent and a cursor during pagination.
+   * 
+   */
   export interface MarketingEventEdge {
     
     /**
@@ -15024,6 +16229,10 @@ export interface AppUsagePricing {
     node: MarketingEvent;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple MetafieldStorefrontVisibilities.
+   * 
+   */
   export interface MetafieldStorefrontVisibilityConnection {
     
     /**
@@ -15037,6 +16246,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one MetafieldStorefrontVisibility and a cursor during pagination.
+   * 
+   */
   export interface MetafieldStorefrontVisibilityEdge {
     
     /**
@@ -15051,13 +16264,13 @@ export interface AppUsagePricing {
   }
   
   /**
-   * Represents a whitelist record that enables a metafield to be visible to the storefront.
+   * Represents an allowlist record that enables a metafield to be visible to the storefront.
    * 
    */
   export interface MetafieldStorefrontVisibility extends Node, LegacyInteroperability {
     
     /**
-     * The date and time when the whitelist record was created.
+     * The date and time when the allowlist record was created.
      */
     createdAt: DateTime;
     
@@ -15067,7 +16280,7 @@ export interface AppUsagePricing {
     id: string;
     
     /**
-     * Key of a metafield in the visibility whitelist.
+     * Key of a metafield in the visibility allowlist.
      */
     key: string;
     
@@ -15077,17 +16290,17 @@ export interface AppUsagePricing {
     legacyResourceId: UnsignedInt64;
     
     /**
-     * Namespace of a metafield in the visibility whitelist.
+     * Namespace of a metafield in the visibility allowlist.
      */
     namespace: string;
     
     /**
-     * Owner type of a metafield in the visibility whitelist.
+     * Owner type of a metafield in the visibility allowlist.
      */
     ownerType: MetafieldOwnerType;
     
     /**
-     * The date and time when the whitelist record was updated.
+     * The date and time when the allowlist record was updated.
      */
     updatedAt: DateTime;
   }
@@ -15314,34 +16527,9 @@ export interface AppUsagePricing {
   }
   
   /**
-   * The set of valid sort keys for the DiscountCode query.
+   * An auto-generated type for paginating through multiple PriceRuleDiscountCodes.
+   * 
    */
-  export const enum DiscountCodeSortKeys {
-    
-    /**
-     * Sort by the `code` value.
-     */
-    CODE = 'CODE',
-    
-    /**
-     * Sort by the `created_at` value.
-     */
-    CREATED_AT = 'CREATED_AT',
-    
-    /**
-     * Sort by the `id` value.
-     */
-    ID = 'ID',
-    
-    /**
-     * During a search (i.e. when the `query` parameter has been specified on the connection) this sorts the
-     * results by relevance to the search term(s). When no search query is specified, this sort key is not
-     * deterministic and should not be used.
-     * 
-     */
-    RELEVANCE = 'RELEVANCE'
-  }
-  
   export interface PriceRuleDiscountCodeConnection {
     
     /**
@@ -15355,6 +16543,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one PriceRuleDiscountCode and a cursor during pagination.
+   * 
+   */
   export interface PriceRuleDiscountCodeEdge {
     
     /**
@@ -15687,28 +16879,17 @@ export interface AppUsagePricing {
   /**
    * The value of the price rule.
    */
-  export type PriceRuleValue = PriceRulePercentValue | PriceRuleFixedAmountValue;
+  export type PriceRuleValue = PriceRuleFixedAmountValue | PriceRulePercentValue;
   
   /** Use this to resolve union type PriceRuleValue */
   export type PossiblePriceRuleValueTypeNames =
-  'PriceRulePercentValue' |
-  'PriceRuleFixedAmountValue';
+  'PriceRuleFixedAmountValue' |
+  'PriceRulePercentValue';
   
   export interface PriceRuleValueNameMap {
     PriceRuleValue: PriceRuleValue;
-    PriceRulePercentValue: PriceRulePercentValue;
     PriceRuleFixedAmountValue: PriceRuleFixedAmountValue;
-  }
-  
-  /**
-   * The value of a percent price rule.
-   */
-  export interface PriceRulePercentValue {
-    
-    /**
-     * The percent value of the price rule.
-     */
-    percentage: number;
+    PriceRulePercentValue: PriceRulePercentValue;
   }
   
   /**
@@ -15720,6 +16901,17 @@ export interface AppUsagePricing {
      * The monetary value of the price rule.
      */
     amount: Money;
+  }
+  
+  /**
+   * The value of a percent price rule.
+   */
+  export interface PriceRulePercentValue {
+    
+    /**
+     * The percent value of the price rule.
+     */
+    percentage: number;
   }
   
   /**
@@ -15766,6 +16958,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple PriceRules.
+   * 
+   */
   export interface PriceRuleConnection {
     
     /**
@@ -15779,6 +16975,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one PriceRule and a cursor during pagination.
+   * 
+   */
   export interface PriceRuleEdge {
     
     /**
@@ -15926,6 +17126,10 @@ export interface AppUsagePricing {
     ONLINE_STORE = 'ONLINE_STORE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple ScriptTags.
+   * 
+   */
   export interface ScriptTagConnection {
     
     /**
@@ -15939,6 +17143,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one ScriptTag and a cursor during pagination.
+   * 
+   */
   export interface ScriptTagEdge {
     
     /**
@@ -15969,12 +17177,6 @@ export interface AppUsagePricing {
     analyticsToken: string;
     
     /**
-     * List of app installations on the shop.
-     * @deprecated Use `QueryRoot.appInstallations` instead.
-     */
-    appInstallations: AppInstallationConnection;
-    
-    /**
      * Paginated list of fulfillment orders assigned to fulfillment services.
      */
     assignedFulfillmentOrders: FulfillmentOrderConnection;
@@ -15988,12 +17190,6 @@ export interface AppUsagePricing {
      * The shop's billing address information.
      */
     billingAddress: MailingAddress;
-    
-    /**
-     * List of channel app installations on the shop.
-     * @deprecated Use `appInstallations` instead
-     */
-    channelAppInstallations: AppInstallationConnection;
     
     /**
      * Exposes the number of channels.
@@ -16020,7 +17216,7 @@ export interface AppUsagePricing {
     
     /**
      * List of the shop's collection saved searches.
-     * @deprecated Use `QueryRoot.priceRuleSavedSearches` instead.
+     * @deprecated Use `QueryRoot.collectionSavedSearches` instead.
      */
     collectionSavedSearches: SavedSearchConnection;
     
@@ -16069,7 +17265,7 @@ export interface AppUsagePricing {
     customerSavedSearches: SavedSearchConnection;
     
     /**
-     * Tags added to customer accounts.
+     * A list of tags that have been added to customer accounts.
      */
     customerTags: StringConnection;
     
@@ -16085,13 +17281,18 @@ export interface AppUsagePricing {
     description?: string;
     
     /**
+     * The domains configured for the shop.
+     */
+    domains: Array<Domain>;
+    
+    /**
      * List of the shop's draft order saved searches.
      * @deprecated Use `QueryRoot.draftOrderSavedSearches` instead.
      */
     draftOrderSavedSearches: SavedSearchConnection;
     
     /**
-     * Tags added to draft orders.
+     * A list of tags that have been added to draft orders.
      */
     draftOrderTags: StringConnection;
     
@@ -16137,12 +17338,6 @@ export interface AppUsagePricing {
      * Globally unique identifier.
      */
     id: string;
-    
-    /**
-     * List of apps that are installed on the shop.
-     * @deprecated Use `appInstallations` instead
-     */
-    installedApps: AppConnection;
     
     /**
      * List of the shop's inventory items.
@@ -16211,7 +17406,7 @@ export interface AppUsagePricing {
     orderSavedSearches: SavedSearchConnection;
     
     /**
-     * Tags added to orders.
+     * A list of tags that have been added to orders.
      */
     orderTags: StringConnection;
     
@@ -16282,7 +17477,7 @@ export interface AppUsagePricing {
     productSavedSearches: SavedSearchConnection;
     
     /**
-     * Tags added to products.
+     * A list of tags that have been added to products.
      */
     productTags: StringConnection;
     
@@ -16342,6 +17537,11 @@ export interface AppUsagePricing {
      * Countries that the shop ships to.
      */
     shipsToCountries: Array<CountryCode>;
+    
+    /**
+     * A list of all policies associated with a shop.
+     */
+    shopPolicies: Array<ShopPolicy>;
     
     /**
      * Shopify Payments account information, including balances and payouts.
@@ -16494,6 +17694,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple Apps.
+   * 
+   */
   export interface AppConnection {
     
     /**
@@ -16507,6 +17711,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one App and a cursor during pagination.
+   * 
+   */
   export interface AppEdge {
     
     /**
@@ -16562,6 +17770,10 @@ export interface AppUsagePricing {
     moneyWithCurrencyInEmailsFormat: string;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple CurrencySettings.
+   * 
+   */
   export interface CurrencySettingConnection {
     
     /**
@@ -16575,6 +17787,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one CurrencySetting and a cursor during pagination.
+   * 
+   */
   export interface CurrencySettingEdge {
     
     /**
@@ -16624,6 +17840,10 @@ export interface AppUsagePricing {
     DISABLED = 'DISABLED'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple Strings.
+   * 
+   */
   export interface StringConnection {
     
     /**
@@ -16637,6 +17857,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one String and a cursor during pagination.
+   * 
+   */
   export interface StringEdge {
     
     /**
@@ -16678,6 +17902,7 @@ export interface AppUsagePricing {
     
     /**
      * Whether the delivery profiles functionality is enabled for this shop.
+     * @deprecated Delivery profiles are now 100% enabled across Shopify.
      */
     deliveryProfiles: boolean;
     
@@ -16695,6 +17920,11 @@ export interface AppUsagePricing {
      * Display Harmonized System codes on products.  Used for customs when shipping cross-border.
      */
     harmonizedSystemCode: boolean;
+    
+    /**
+     * Whether a shop can enable international domains.
+     */
+    internationalDomains: boolean;
     
     /**
      * Whether to show the live view. Live view is hidden from merchants that are on a trial or don't have a storefront.
@@ -16759,30 +17989,6 @@ export interface AppUsagePricing {
      * Shop has Shopify branding.
      */
     SHOPIFY = 'SHOPIFY'
-  }
-  
-  /**
-   * The set of valid sort keys for the Apps query.
-   */
-  export const enum AppsSortKeys {
-    
-    /**
-     * Sort by the `title` value.
-     */
-    TITLE = 'TITLE',
-    
-    /**
-     * Sort by the `id` value.
-     */
-    ID = 'ID',
-    
-    /**
-     * During a search (i.e. when the `query` parameter has been specified on the connection) this sorts the
-     * results by relevance to the search term(s). When no search query is specified, this sort key is not
-     * deterministic and should not be used.
-     * 
-     */
-    RELEVANCE = 'RELEVANCE'
   }
   
   /**
@@ -16896,7 +18102,7 @@ export interface AppUsagePricing {
     maxProductOptions: number;
     
     /**
-     * Maximum number of variants allowed.
+     * The maximum number of variants allowed per product.
      */
     maxProductVariants: number;
     
@@ -16906,7 +18112,7 @@ export interface AppUsagePricing {
     redirectLimitReached: boolean;
     
     /**
-     * SKU limits. If the shop has unlimited skus the quantity used cannot be retrieved.
+     * The maximum number of variants allowed per shop. If the shop has unlimited SKUs, then the quantity used cannot be retrieved.
      */
     skuResourceLimits: ResourceLimit;
   }
@@ -16959,6 +18165,10 @@ export interface AppUsagePricing {
     resultsAfterCount: number;
   }
   
+  /**
+   * An auto-generated type which holds one SearchResult and a cursor during pagination.
+   * 
+   */
   export interface SearchResultEdge {
     
     /**
@@ -17028,6 +18238,73 @@ export interface AppUsagePricing {
      * The filter option's value.
      */
     value: string;
+  }
+  
+  /**
+   * Policy that a merchant has configured for their store, such as their refund or privacy policy.
+   */
+  export interface ShopPolicy extends Node, HasPublishedTranslations {
+    
+    /**
+     * The text of the policy. The maximum size is 512kb.
+     */
+    body: HTML;
+    
+    /**
+     * Globally unique identifier.
+     */
+    id: string;
+    
+    /**
+     * The translations associated with the resource.
+     */
+    translations: Array<PublishedTranslation>;
+    
+    /**
+     * The shop policy type.
+     */
+    type: ShopPolicyType;
+    
+    /**
+     * The public URL of the policy.
+     */
+    url: URL;
+  }
+  
+  /**
+   * Available shop policy types.
+   */
+  export const enum ShopPolicyType {
+    
+    /**
+     * The refund policy.
+     */
+    REFUND_POLICY = 'REFUND_POLICY',
+    
+    /**
+     * The shipping policy.
+     */
+    SHIPPING_POLICY = 'SHIPPING_POLICY',
+    
+    /**
+     * The privacy policy.
+     */
+    PRIVACY_POLICY = 'PRIVACY_POLICY',
+    
+    /**
+     * The terms of service.
+     */
+    TERMS_OF_SERVICE = 'TERMS_OF_SERVICE',
+    
+    /**
+     * The terms of sale.
+     */
+    TERMS_OF_SALE = 'TERMS_OF_SALE',
+    
+    /**
+     * The legal notice.
+     */
+    LEGAL_NOTICE = 'LEGAL_NOTICE'
   }
   
   /**
@@ -17135,6 +18412,10 @@ export interface AppUsagePricing {
     verifications: Array<ShopifyPaymentsVerification>;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple ShopifyPaymentsBankAccounts.
+   * 
+   */
   export interface ShopifyPaymentsBankAccountConnection {
     
     /**
@@ -17148,6 +18429,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one ShopifyPaymentsBankAccount and a cursor during pagination.
+   * 
+   */
   export interface ShopifyPaymentsBankAccountEdge {
     
     /**
@@ -17241,6 +18526,10 @@ export interface AppUsagePricing {
     WITHDRAWAL = 'WITHDRAWAL'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple ShopifyPaymentsPayouts.
+   * 
+   */
   export interface ShopifyPaymentsPayoutConnection {
     
     /**
@@ -17254,6 +18543,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one ShopifyPaymentsPayout and a cursor during pagination.
+   * 
+   */
   export interface ShopifyPaymentsPayoutEdge {
     
     /**
@@ -17467,6 +18760,10 @@ export interface AppUsagePricing {
     ShopifyPaymentsJpChargeStatementDescriptor: ShopifyPaymentsJpChargeStatementDescriptor;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple ShopifyPaymentsDisputes.
+   * 
+   */
   export interface ShopifyPaymentsDisputeConnection {
     
     /**
@@ -17480,6 +18777,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one ShopifyPaymentsDispute and a cursor during pagination.
+   * 
+   */
   export interface ShopifyPaymentsDisputeEdge {
     
     /**
@@ -17873,6 +19174,10 @@ export interface AppUsagePricing {
     givenName: string;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple StorefrontAccessTokens.
+   * 
+   */
   export interface StorefrontAccessTokenConnection {
     
     /**
@@ -17886,6 +19191,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one StorefrontAccessToken and a cursor during pagination.
+   * 
+   */
   export interface StorefrontAccessTokenEdge {
     
     /**
@@ -18002,6 +19311,10 @@ export interface AppUsagePricing {
     published: boolean;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple TenderTransactions.
+   * 
+   */
   export interface TenderTransactionConnection {
     
     /**
@@ -18015,6 +19328,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one TenderTransaction and a cursor during pagination.
+   * 
+   */
   export interface TenderTransactionEdge {
     
     /**
@@ -18258,6 +19575,10 @@ export interface AppUsagePricing {
     DELIVERY_METHOD_DEFINITION = 'DELIVERY_METHOD_DEFINITION'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple TranslatableResources.
+   * 
+   */
   export interface TranslatableResourceConnection {
     
     /**
@@ -18271,6 +19592,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one TranslatableResource and a cursor during pagination.
+   * 
+   */
   export interface TranslatableResourceEdge {
     
     /**
@@ -18292,6 +19617,7 @@ export interface AppUsagePricing {
     
     /**
      * URL where the webhook subscription should send the POST request when the event occurs.
+     * @deprecated Use `endpoint` instead
      */
     callbackUrl: URL;
     
@@ -18299,6 +19625,11 @@ export interface AppUsagePricing {
      * The date and time when the webhook subscription was created.
      */
     createdAt: DateTime;
+    
+    /**
+     * Endpoint where webhooks will be delivered to.
+     */
+    endpoint: WebhookSubscriptionEndpoint;
     
     /**
      * The format in which the webhook subscription should send the data.
@@ -18334,6 +19665,51 @@ export interface AppUsagePricing {
      * The date and time when the webhook subscription was updated.
      */
     updatedAt: DateTime;
+  }
+  
+  /**
+   * Endpoint where webhooks will be delivered.
+   */
+  export type WebhookSubscriptionEndpoint =
+  WebhookEventBridgeEndpoint |
+  WebhookHttpEndpoint;
+  
+  /** Use this to resolve union type WebhookSubscriptionEndpoint */
+  export type PossibleWebhookSubscriptionEndpointTypeNames =
+  'WebhookEventBridgeEndpoint' |
+  'WebhookHttpEndpoint';
+  
+  export interface WebhookSubscriptionEndpointNameMap {
+    WebhookSubscriptionEndpoint: WebhookSubscriptionEndpoint;
+    WebhookEventBridgeEndpoint: WebhookEventBridgeEndpoint;
+    WebhookHttpEndpoint: WebhookHttpEndpoint;
+  }
+  
+  /**
+   * Amazon EventBridge event source.
+   */
+  export interface WebhookEventBridgeEndpoint {
+    
+    /**
+     * ARN of this EventBridge event source.
+     */
+    arn: ARN;
+  }
+  
+  /**
+   * Amazon Web Services ARN.
+   */
+  export type ARN = any;
+  
+  /**
+   * HTTP endpoint where POST requests will be made to.
+   */
+  export interface WebhookHttpEndpoint {
+    
+    /**
+     * URL of webhook endpoint to deliver webhooks to.
+     */
+    callbackUrl: URL;
   }
   
   /**
@@ -18747,7 +20123,37 @@ export interface AppUsagePricing {
     /**
      * The webhook topic for `locales/update` events.
      */
-    LOCALES_UPDATE = 'LOCALES_UPDATE'
+    LOCALES_UPDATE = 'LOCALES_UPDATE',
+    
+    /**
+     * The webhook topic for `domains/create` events.
+     */
+    DOMAINS_CREATE = 'DOMAINS_CREATE',
+    
+    /**
+     * The webhook topic for `domains/update` events.
+     */
+    DOMAINS_UPDATE = 'DOMAINS_UPDATE',
+    
+    /**
+     * The webhook topic for `domains/destroy` events.
+     */
+    DOMAINS_DESTROY = 'DOMAINS_DESTROY',
+    
+    /**
+     * The webhook topic for `profiles/create` events.
+     */
+    PROFILES_CREATE = 'PROFILES_CREATE',
+    
+    /**
+     * The webhook topic for `profiles/update` events.
+     */
+    PROFILES_UPDATE = 'PROFILES_UPDATE',
+    
+    /**
+     * The webhook topic for `profiles/delete` events.
+     */
+    PROFILES_DELETE = 'PROFILES_DELETE'
   }
   
   /**
@@ -18774,6 +20180,10 @@ export interface AppUsagePricing {
     RELEVANCE = 'RELEVANCE'
   }
   
+  /**
+   * An auto-generated type for paginating through multiple WebhookSubscriptions.
+   * 
+   */
   export interface WebhookSubscriptionConnection {
     
     /**
@@ -18787,6 +20197,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one WebhookSubscription and a cursor during pagination.
+   * 
+   */
   export interface WebhookSubscriptionEdge {
     
     /**
@@ -19018,6 +20432,24 @@ export interface AppUsagePricing {
     discountCodeBasicUpdate?: DiscountCodeBasicUpdatePayload;
     
     /**
+     * Asynchronously activate code discounts in bulk using a search query, a `savedSearchId` or a list of IDs.
+     * 
+     */
+    discountCodeBulkActivate?: DiscountCodeBulkActivatePayload;
+    
+    /**
+     * Asynchronously deactivates code discounts in bulk using a search query, a `savedSearchId` or a list of IDs.
+     * 
+     */
+    discountCodeBulkDeactivate?: DiscountCodeBulkDeactivatePayload;
+    
+    /**
+     * Asynchronously delete code discounts in bulk using a search query, a `savedSearchId` or a list of IDs.
+     * 
+     */
+    discountCodeBulkDelete?: DiscountCodeBulkDeletePayload;
+    
+    /**
      * Creates a BXGY code discount.
      */
     discountCodeBxgyCreate?: DiscountCodeBxgyCreatePayload;
@@ -19046,6 +20478,13 @@ export interface AppUsagePricing {
      * Updates a free shipping code discount.
      */
     discountCodeFreeShippingUpdate?: DiscountCodeFreeShippingUpdatePayload;
+    
+    /**
+     * Asynchronously delete discount redeem codes in bulk. Specify the redeem codes to delete by providing a
+     * search query, a `savedSearchId`, or a list of redeem code IDs.
+     * 
+     */
+    discountCodeRedeemCodeBulkDelete?: DiscountCodeRedeemCodeBulkDeletePayload;
     
     /**
      * Calculates the properties of a draft order. Useful for determining information
@@ -19083,6 +20522,18 @@ export interface AppUsagePricing {
      * Updates a draft order.
      */
     draftOrderUpdate?: DraftOrderUpdatePayload;
+    
+    /**
+     * Creates a new Amazon EventBridge webhook subscription.
+     * 
+     */
+    eventBridgeWebhookSubscriptionCreate?: EventBridgeWebhookSubscriptionCreatePayload;
+    
+    /**
+     * Updates an Amazon EventBridge webhook subscription.
+     * 
+     */
+    eventBridgeWebhookSubscriptionUpdate?: EventBridgeWebhookSubscriptionUpdatePayload;
     
     /**
      * Triggers a workflow defined by the merchant in Shopify Flow. To learn more, see [_Create Shopify Flow triggers_](https://help.shopify.com/api/embedded-apps/app-extensions/flow/create-triggers).
@@ -19205,8 +20656,14 @@ export interface AppUsagePricing {
     
     /**
      * Kit Skill requested by developer for app and shop.
+     * @deprecated Kit Skills will be deprecated as of 2021-04-01.
      */
     kitSkillTriggerRequest?: KitSkillTriggerRequestPayload;
+    
+    /**
+     * Create new marketing activity.
+     */
+    marketingActivityCreate?: MarketingActivityCreatePayload;
     
     /**
      * Updates a marketing activity.
@@ -19252,6 +20709,11 @@ export interface AppUsagePricing {
     orderEditAddCustomItem?: OrderEditAddCustomItemPayload;
     
     /**
+     * Add a discount to an item added during this order edit.
+     */
+    orderEditAddLineItemDiscount?: OrderEditAddLineItemDiscountPayload;
+    
+    /**
      * Add a line item from an existing product variant.
      */
     orderEditAddVariant?: OrderEditAddVariantPayload;
@@ -19267,6 +20729,11 @@ export interface AppUsagePricing {
      * 
      */
     orderEditCommit?: OrderEditCommitPayload;
+    
+    /**
+     * Removes a discount that was added as part of this edit.
+     */
+    orderEditRemoveLineItemDiscount?: OrderEditRemoveLineItemDiscountPayload;
     
     /**
      * Set the quantity of an item on the order.
@@ -19343,7 +20810,12 @@ export interface AppUsagePricing {
     productAppendImages?: ProductAppendImagesPayload;
     
     /**
-     * Creates a product.
+     * Change status of a product.
+     */
+    productChangeStatus?: ProductChangeStatusPayload;
+    
+    /**
+     * Creates a product. Products that are sold exclusively on subscription (`requiresSellingPlan: true`) can only be created on online stores.
      */
     productCreate?: ProductCreatePayload;
     
@@ -19378,7 +20850,7 @@ export interface AppUsagePricing {
     productImageUpdate?: ProductImageUpdatePayload;
     
     /**
-     * Publishes a product.
+     * Publishes a product. Products that are sold exclusively on subscription (`requiresSellingPlan: true`) can only be published on online stores.
      * @deprecated Use `publishablePublish` instead
      */
     productPublish?: ProductPublishPayload;
@@ -19400,7 +20872,7 @@ export interface AppUsagePricing {
     productUnpublish?: ProductUnpublishPayload;
     
     /**
-     * Updates a product.
+     * Updates a product. Products that are sold exclusively on subscription (`requiresSellingPlan: true`) can be updated only on online stores. If you update a product to be sold only on a subscription, then the product is unpublished from all channels except the online store.
      */
     productUpdate?: ProductUpdatePayload;
     
@@ -19408,6 +20880,11 @@ export interface AppUsagePricing {
      * Updates media for a product.
      */
     productUpdateMedia?: ProductUpdateMediaPayload;
+    
+    /**
+     * Appends media from a product to variants of the product.
+     */
+    productVariantAppendMedia?: ProductVariantAppendMediaPayload;
     
     /**
      * Creates a product variant.
@@ -19420,27 +20897,32 @@ export interface AppUsagePricing {
     productVariantDelete?: ProductVariantDeletePayload;
     
     /**
+     * Deletes media from product variants.
+     */
+    productVariantDetachMedia?: ProductVariantDetachMediaPayload;
+    
+    /**
      * Updates a product variant.
      */
     productVariantUpdate?: ProductVariantUpdatePayload;
     
     /**
-     * Publishes a resource to a channel.
+     * Publishes a resource to a channel. If the resource is a product, then it's visible in the channel only if the product status is `active`. Products that are sold exclusively on subscription (`requiresSellingPlan: true`) can be published only on online stores.
      */
     publishablePublish?: PublishablePublishPayload;
     
     /**
-     * Publishes a resource to current channel.
+     * Publishes a resource to current channel. If the resource is a product, then it's visible in the channel only if the product status is `active`. Products that are sold exclusively on subscription (`requiresSellingPlan: true`) can be published only on online stores.
      */
     publishablePublishToCurrentChannel?: PublishablePublishToCurrentChannelPayload;
     
     /**
-     * Unpublishes a resource to a channel.
+     * Unpublishes a resource from a channel. If the resource is a product, then it's visible in the channel only if the product status is `active`.
      */
     publishableUnpublish?: PublishableUnpublishPayload;
     
     /**
-     * Unpublishes a resource to current channel.
+     * Unpublishes a resource from the current channel. If the resource is a product, then it's visible in the channel only if the product status is `active`.
      */
     publishableUnpublishToCurrentChannel?: PublishableUnpublishToCurrentChannelPayload;
     
@@ -19513,12 +20995,19 @@ export interface AppUsagePricing {
     shopLocaleUpdate?: ShopLocaleUpdatePayload;
     
     /**
+     * Updates a shop policy.
+     */
+    shopPolicyUpdate?: ShopPolicyUpdatePayload;
+    
+    /**
      * Generates the URL and signed paramaters needed to upload an asset to Shopify.
+     * @deprecated Use `stagedUploadsCreate` instead
      */
     stagedUploadTargetGenerate?: StagedUploadTargetGeneratePayload;
     
     /**
      * Uploads multiple images.
+     * @deprecated Use `stagedUploadsCreate` instead
      */
     stagedUploadTargetsGenerate?: StagedUploadTargetsGeneratePayload;
     
@@ -19692,6 +21181,11 @@ export interface AppUsagePricing {
    * Allows an app to charge per billing interval.
    */
   export interface AppRecurringPricingInput {
+    
+    /**
+     * Specifies the billing frequency of the app subscription.
+     */
+    interval?: AppPricingInterval;
     
     /**
      * The amount to be charged to the store every billing interval. The only permitted currency code is USD.
@@ -20351,7 +21845,11 @@ export interface AppUsagePricing {
     privateMetafields?: Array<PrivateMetafieldInput>;
     
     /**
-     * Tags that the shop owner has attached to the customer.
+     * A comma separated list of tags associated with the customer. Updating `tags` overwrites
+     * any existing tags that were previously added to the customer. To add new tags without overwriting
+     * existing tags, use the [tagsAdd](https://shopify.dev/docs/admin-api/graphql/reference/common-objects/tagsadd)
+     * mutation.
+     * 
      */
     tags?: Array<string>;
     
@@ -21031,7 +22529,7 @@ export interface AppUsagePricing {
   export interface DiscountUserError extends DisplayableError {
     
     /**
-     * An error code to uniquely identify the error.
+     * Error code to uniquely identify the error.
      */
     code?: DiscountErrorCode;
     
@@ -21052,7 +22550,7 @@ export interface AppUsagePricing {
   }
   
   /**
-   * Possible error codes that could be returned by a discounts mutation.
+   * Possible error codes that could be returned by DiscountUserError.
    */
   export const enum DiscountErrorCode {
     
@@ -21132,14 +22630,14 @@ export interface AppUsagePricing {
     EXCEEDED_MAX = 'EXCEEDED_MAX',
     
     /**
-     * Cannot have both minimum subtotal and quantity present.
-     */
-    MINIMUM_SUBTOTAL_AND_QUANTITY_RANGE_BOTH_PRESENT = 'MINIMUM_SUBTOTAL_AND_QUANTITY_RANGE_BOTH_PRESENT',
-    
-    /**
      * Value is outside allowed range.
      */
     VALUE_OUTSIDE_RANGE = 'VALUE_OUTSIDE_RANGE',
+    
+    /**
+     * Cannot have both minimum subtotal and quantity present.
+     */
+    MINIMUM_SUBTOTAL_AND_QUANTITY_RANGE_BOTH_PRESENT = 'MINIMUM_SUBTOTAL_AND_QUANTITY_RANGE_BOTH_PRESENT',
     
     /**
      * Active period overlaps with other automatic discounts. At any given time, only one automatic discount can be active.
@@ -21159,7 +22657,12 @@ export interface AppUsagePricing {
     /**
      * Input value is already present.
      */
-    DUPLICATE = 'DUPLICATE'
+    DUPLICATE = 'DUPLICATE',
+    
+    /**
+     * Input value is not included in the list.
+     */
+    INCLUSION = 'INCLUSION'
   }
   
   /**
@@ -21707,6 +23210,54 @@ export interface AppUsagePricing {
   }
   
   /**
+   * Return type for `discountCodeBulkActivate` mutation.
+   */
+  export interface DiscountCodeBulkActivatePayload {
+    
+    /**
+     * The asynchronous job that activates the code discounts.
+     */
+    job?: Job;
+    
+    /**
+     * List of errors that occurred executing the mutation.
+     */
+    userErrors: Array<DiscountUserError>;
+  }
+  
+  /**
+   * Return type for `discountCodeBulkDeactivate` mutation.
+   */
+  export interface DiscountCodeBulkDeactivatePayload {
+    
+    /**
+     * The asynchronous job that deactivates the code discounts.
+     */
+    job?: Job;
+    
+    /**
+     * List of errors that occurred executing the mutation.
+     */
+    userErrors: Array<DiscountUserError>;
+  }
+  
+  /**
+   * Return type for `discountCodeBulkDelete` mutation.
+   */
+  export interface DiscountCodeBulkDeletePayload {
+    
+    /**
+     * The asynchronous job that deletes the code discounts.
+     */
+    job?: Job;
+    
+    /**
+     * List of errors that occurred executing the mutation.
+     */
+    userErrors: Array<DiscountUserError>;
+  }
+  
+  /**
    * Specifies input field to create or update a BXGY code discount.
    */
   export interface DiscountCodeBxgyInput {
@@ -21875,6 +23426,11 @@ export interface AppUsagePricing {
      * A list of destinations where the discount will apply.
      */
     destination?: DiscountShippingDestinationSelectionInput;
+    
+    /**
+     * The maximum shipping price that qualifies for the discount.
+     */
+    maximumShippingPrice?: Decimal;
   }
   
   /**
@@ -21939,6 +23495,22 @@ export interface AppUsagePricing {
      * The updated code discount.
      */
     codeDiscountNode?: DiscountCodeNode;
+    
+    /**
+     * List of errors that occurred executing the mutation.
+     */
+    userErrors: Array<DiscountUserError>;
+  }
+  
+  /**
+   * Return type for `discountCodeRedeemCodeBulkDelete` mutation.
+   */
+  export interface DiscountCodeRedeemCodeBulkDeletePayload {
+    
+    /**
+     * The asynchronous job that deletes the discount redeem codes.
+     */
+    job?: Job;
     
     /**
      * List of errors that occurred executing the mutation.
@@ -22019,8 +23591,7 @@ export interface AppUsagePricing {
     shippingLine?: ShippingLineInput;
     
     /**
-     * Additional short descriptors, commonly used for filtering and searching,
-     * formatted as a string of comma-separated values.
+     * A comma separated list of tags that have been added to the draft order.
      * 
      */
     tags?: Array<string>;
@@ -22542,6 +24113,65 @@ export interface AppUsagePricing {
      * List of errors that occurred executing the mutation.
      */
     userErrors: Array<UserError>;
+  }
+  
+  /**
+   * Specifies the input fields for an EventBridge webhook subscription.
+   * 
+   */
+  export interface EventBridgeWebhookSubscriptionInput {
+    
+    /**
+     * ARN of the EventBridge event source.
+     */
+    arn?: ARN;
+    
+    /**
+     * The format in which the webhook subscription should send the data.
+     */
+    format?: WebhookSubscriptionFormat;
+    
+    /**
+     * The list of fields to be included in the webhook subscription.
+     */
+    includeFields?: Array<string>;
+    
+    /**
+     * The list of namespaces for any metafields that should be included in the webhook subscription.
+     */
+    metafieldNamespaces?: Array<string>;
+  }
+  
+  /**
+   * Return type for `eventBridgeWebhookSubscriptionCreate` mutation.
+   */
+  export interface EventBridgeWebhookSubscriptionCreatePayload {
+    
+    /**
+     * List of errors that occurred executing the mutation.
+     */
+    userErrors: Array<UserError>;
+    
+    /**
+     * The webhook subscription that was created.
+     */
+    webhookSubscription?: WebhookSubscription;
+  }
+  
+  /**
+   * Return type for `eventBridgeWebhookSubscriptionUpdate` mutation.
+   */
+  export interface EventBridgeWebhookSubscriptionUpdatePayload {
+    
+    /**
+     * List of errors that occurred executing the mutation.
+     */
+    userErrors: Array<UserError>;
+    
+    /**
+     * The webhook subscription that was updated.
+     */
+    webhookSubscription?: WebhookSubscription;
   }
   
   /**
@@ -23242,6 +24872,112 @@ export interface AppUsagePricing {
   }
   
   /**
+   * Specifies the input fields required to create a marketing activity.
+   */
+  export interface MarketingActivityCreateInput {
+    
+    /**
+     * The title of the marketing activity.
+     */
+    marketingActivityTitle?: string;
+    
+    /**
+     * The form data in JSON serialized as a string.
+     */
+    formData?: string;
+    
+    /**
+     * The ID of the marketing activity extension.
+     */
+    marketingActivityExtensionId: string;
+    
+    /**
+     * Encoded context containing marketing campaign id.
+     */
+    context?: string;
+    
+    /**
+     * Specifies the
+     * [Urchin Traffic Module (UTM) parameters](https://en.wikipedia.org/wiki/UTM_parameters)
+     * that are associated with a related marketing campaign. UTMInput is required for all Marketing
+     * tactics except Storefront App.
+     * 
+     */
+    utm?: UTMInput;
+    
+    /**
+     * The current state of the marketing activity.
+     */
+    status: MarketingActivityStatus;
+    
+    /**
+     * The budget for this marketing activity.
+     */
+    budget?: MarketingActivityBudgetInput;
+  }
+  
+  /**
+   * Specifies the
+   * [Urchin Traffic Module (UTM) parameters](https://en.wikipedia.org/wiki/UTM_parameters)
+   * that are associated with a related marketing campaign.
+   * 
+   */
+  export interface UTMInput {
+    
+    /**
+     * The name of the UTM campaign.
+     */
+    campaign: string;
+    
+    /**
+     * The name of the website or application where the referral link exists.
+     */
+    source: string;
+    
+    /**
+     * The UTM campaign medium.
+     */
+    medium: string;
+  }
+  
+  /**
+   * This type combines budget amount and its marketing budget type.
+   */
+  export interface MarketingActivityBudgetInput {
+    
+    /**
+     * Budget type for marketing activity.
+     */
+    budgetType?: MarketingBudgetBudgetType;
+    
+    /**
+     * Amount of budget for the marketing activity.
+     */
+    total?: MoneyInput;
+  }
+  
+  /**
+   * Return type for `marketingActivityCreate` mutation.
+   */
+  export interface MarketingActivityCreatePayload {
+    
+    /**
+     * The created marketing activity.
+     */
+    marketingActivity?: MarketingActivity;
+    
+    /**
+     * The path to return back to shopify admin from embedded editor.
+     */
+    redirectPath?: string;
+    
+    /**
+     * List of errors that occurred executing the mutation.
+     */
+    userErrors: Array<UserError>;
+  }
+  
+  /**
    * Specifies the input fields required to update a marketing activity.
    */
   export interface MarketingActivityUpdateInput {
@@ -23277,6 +25013,16 @@ export interface AppUsagePricing {
     status?: MarketingActivityStatus;
     
     /**
+     * The target state of the marketing activity.
+     */
+    targetStatus?: MarketingActivityStatus;
+    
+    /**
+     * The form data of the marketing activity.
+     */
+    formData?: string;
+    
+    /**
      * Specifies the
      * [Urchin Traffic Module (UTM) parameters](https://en.wikipedia.org/wiki/UTM_parameters)
      * that are associated with a related marketing campaign. UTMInput is required for all Marketing
@@ -23305,46 +25051,6 @@ export interface AppUsagePricing {
   }
   
   /**
-   * This type combines budget amount and its marketing budget type.
-   */
-  export interface MarketingActivityBudgetInput {
-    
-    /**
-     * Budget type for marketing activity.
-     */
-    budgetType?: MarketingBudgetBudgetType;
-    
-    /**
-     * Amount of budget for the marketing activity.
-     */
-    total?: MoneyInput;
-  }
-  
-  /**
-   * Specifies the
-   * [Urchin Traffic Module (UTM) parameters](https://en.wikipedia.org/wiki/UTM_parameters)
-   * that are associated with a related marketing campaign.
-   * 
-   */
-  export interface UTMInput {
-    
-    /**
-     * The name of the UTM campaign.
-     */
-    campaign: string;
-    
-    /**
-     * The name of the website or application where the referral link exists.
-     */
-    source: string;
-    
-    /**
-     * The UTM campaign medium.
-     */
-    medium: string;
-  }
-  
-  /**
    * Return type for `marketingActivityUpdate` mutation.
    */
   export interface MarketingActivityUpdatePayload {
@@ -23353,6 +25059,11 @@ export interface AppUsagePricing {
      * The updated marketing activity.
      */
     marketingActivity?: MarketingActivity;
+    
+    /**
+     * The path to return back to shopify admin from embedded editor.
+     */
+    redirectPath?: string;
     
     /**
      * List of errors that occurred executing the mutation.
@@ -23749,12 +25460,18 @@ export interface AppUsagePricing {
   export interface CalculatedLineItem {
     
     /**
+     * The discounts that have been allocated onto the line item by discount applications.
+     */
+    calculatedDiscountAllocations: Array<CalculatedDiscountAllocation>;
+    
+    /**
      * List of additional information (metafields) about the line item.
      */
     customAttributes: Array<Attribute>;
     
     /**
      * The discounts that have been allocated onto the line item by discount applications.
+     * @deprecated Use `calculatedDiscountAllocations` instead
      */
     discountAllocations: Array<DiscountAllocation>;
     
@@ -23777,6 +25494,11 @@ export interface AppUsagePricing {
      * The total price of editable lines in shop and presentment currencies.
      */
     editableSubtotalSet: MoneyBag;
+    
+    /**
+     * Whether the calculated line item has a staged discount.
+     */
+    hasStagedLineItemDiscount: boolean;
     
     /**
      * Globally unique identifier.
@@ -23842,28 +25564,129 @@ export interface AppUsagePricing {
   }
   
   /**
+   * An amount discounting the line that has been allocated by an associated discount application.
+   * 
+   */
+  export interface CalculatedDiscountAllocation {
+    
+    /**
+     * The money amount allocated by the discount application in shop and presentment currencies.
+     */
+    allocatedAmountSet: MoneyBag;
+    
+    /**
+     * The discount that the allocated amount originated from.
+     */
+    discountApplication: CalculatedDiscountApplication;
+  }
+  
+  /**
+   * A discount application involved in order editing that might be newly added or have new changes applied.
+   * 
+   */
+  export interface CalculatedDiscountApplication {
+    
+    /**
+     * The method by which the discount's value is allocated to its entitled items.
+     */
+    allocationMethod: DiscountApplicationAllocationMethod;
+    
+    /**
+     * The level at which the discount was applied.
+     * 
+     */
+    appliedTo: DiscountApplicationLevel;
+    
+    /**
+     * The description of discount application. Indicates the reason why the discount was applied.
+     */
+    description?: string;
+    
+    /**
+     * Globally unique identifier.
+     */
+    id: string;
+    
+    /**
+     * How the discount amount is distributed on the discounted lines.
+     */
+    targetSelection: DiscountApplicationTargetSelection;
+    
+    /**
+     * Whether the discount is applied on line items or shipping lines.
+     */
+    targetType: DiscountApplicationTargetType;
+    
+    /**
+     * The value of the discount application.
+     */
+    value: PricingValue;
+  }
+  
+  /** Use this to resolve interface type CalculatedDiscountApplication */
+  export type PossibleCalculatedDiscountApplicationTypeNames =
+  'CalculatedAutomaticDiscountApplication' |
+  'CalculatedDiscountCodeApplication' |
+  'CalculatedManualDiscountApplication' |
+  'CalculatedScriptDiscountApplication';
+  
+  export interface CalculatedDiscountApplicationNameMap {
+    CalculatedDiscountApplication: CalculatedDiscountApplication;
+    CalculatedAutomaticDiscountApplication: CalculatedAutomaticDiscountApplication;
+    CalculatedDiscountCodeApplication: CalculatedDiscountCodeApplication;
+    CalculatedManualDiscountApplication: CalculatedManualDiscountApplication;
+    CalculatedScriptDiscountApplication: CalculatedScriptDiscountApplication;
+  }
+  
+  /**
+   * The method by which the discount's value is allocated onto its entitled lines.
+   */
+  export const enum DiscountApplicationLevel {
+    
+    /**
+     * The discount was applied at the order level.
+     * Order level discounts are not factored into the discountedUnitPriceSet on line items.
+     * 
+     */
+    ORDER = 'ORDER',
+    
+    /**
+     * The discount was applied at the line level.
+     * Line level discounts are factored into the discountedUnitPriceSet on line items.
+     * 
+     */
+    LINE = 'LINE'
+  }
+  
+  /**
    * A change that has been applied to an order.
    * 
    */
   export type OrderStagedChange =
   OrderStagedChangeAddCustomItem |
+  OrderStagedChangeAddLineItemDiscount |
+  OrderStagedChangeAddShippingLine |
   OrderStagedChangeAddVariant |
-  OrderStagedChangeIncrementItem |
-  OrderStagedChangeDecrementItem;
+  OrderStagedChangeDecrementItem |
+  OrderStagedChangeIncrementItem;
   
   /** Use this to resolve union type OrderStagedChange */
   export type PossibleOrderStagedChangeTypeNames =
   'OrderStagedChangeAddCustomItem' |
+  'OrderStagedChangeAddLineItemDiscount' |
+  'OrderStagedChangeAddShippingLine' |
   'OrderStagedChangeAddVariant' |
-  'OrderStagedChangeIncrementItem' |
-  'OrderStagedChangeDecrementItem';
+  'OrderStagedChangeDecrementItem' |
+  'OrderStagedChangeIncrementItem';
   
   export interface OrderStagedChangeNameMap {
     OrderStagedChange: OrderStagedChange;
     OrderStagedChangeAddCustomItem: OrderStagedChangeAddCustomItem;
+    OrderStagedChangeAddLineItemDiscount: OrderStagedChangeAddLineItemDiscount;
+    OrderStagedChangeAddShippingLine: OrderStagedChangeAddShippingLine;
     OrderStagedChangeAddVariant: OrderStagedChangeAddVariant;
-    OrderStagedChangeIncrementItem: OrderStagedChangeIncrementItem;
     OrderStagedChangeDecrementItem: OrderStagedChangeDecrementItem;
+    OrderStagedChangeIncrementItem: OrderStagedChangeIncrementItem;
   }
   
   /**
@@ -23889,6 +25712,55 @@ export interface AppUsagePricing {
   }
   
   /**
+   * A discount application added as part of an order edit.
+   * 
+   */
+  export interface OrderStagedChangeAddLineItemDiscount {
+    
+    /**
+     * The description of the discount.
+     */
+    description: string;
+    
+    /**
+     * A globally unique identifier.
+     */
+    id: string;
+    
+    /**
+     * The amount of the discount.
+     */
+    value: PricingValue;
+  }
+  
+  /**
+   * A new shipping line added as part of an order edit.
+   * 
+   */
+  export interface OrderStagedChangeAddShippingLine {
+    
+    /**
+     * Shipping line phone number.
+     */
+    phone?: string;
+    
+    /**
+     * The presentment title of the shipping line.
+     */
+    presentmentTitle?: string;
+    
+    /**
+     * Price of shipping line.
+     */
+    price: MoneyV2;
+    
+    /**
+     * The title of the shipping line.
+     */
+    title?: string;
+  }
+  
+  /**
    * A new item created from an existing product variant.
    * 
    */
@@ -23903,23 +25775,6 @@ export interface AppUsagePricing {
      * The product variant of the added item.
      */
     variant: ProductVariant;
-  }
-  
-  /**
-   * An addition of items to an existing line item on the order.
-   * 
-   */
-  export interface OrderStagedChangeIncrementItem {
-    
-    /**
-     * The number of items added.
-     */
-    delta: number;
-    
-    /**
-     * The original line item.
-     */
-    lineItem: LineItem;
   }
   
   /**
@@ -23945,10 +25800,33 @@ export interface AppUsagePricing {
   }
   
   /**
+   * An addition of items to an existing line item on the order.
+   * 
+   */
+  export interface OrderStagedChangeIncrementItem {
+    
+    /**
+     * The number of items added.
+     */
+    delta: number;
+    
+    /**
+     * The original line item.
+     */
+    lineItem: LineItem;
+  }
+  
+  /**
    * An order with edits applied but not saved.
    * 
    */
   export interface CalculatedOrder extends Node {
+    
+    /**
+     * Returns only the new discount applications being added to the order.
+     * 
+     */
+    addedDiscountApplications: CalculatedDiscountApplicationConnection;
     
     /**
      * Returns only the new line items being added to the order.
@@ -24032,6 +25910,44 @@ export interface AppUsagePricing {
     totalPriceSet: MoneyBag;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple CalculatedDiscountApplications.
+   * 
+   */
+  export interface CalculatedDiscountApplicationConnection {
+    
+    /**
+     * A list of edges.
+     */
+    edges: Array<CalculatedDiscountApplicationEdge>;
+    
+    /**
+     * Information to aid in pagination.
+     */
+    pageInfo: PageInfo;
+  }
+  
+  /**
+   * An auto-generated type which holds one CalculatedDiscountApplication and a cursor during pagination.
+   * 
+   */
+  export interface CalculatedDiscountApplicationEdge {
+    
+    /**
+     * A cursor for use in pagination.
+     */
+    cursor: string;
+    
+    /**
+     * The item at the end of CalculatedDiscountApplicationEdge.
+     */
+    node: CalculatedDiscountApplication;
+  }
+  
+  /**
+   * An auto-generated type for paginating through multiple CalculatedLineItems.
+   * 
+   */
   export interface CalculatedLineItemConnection {
     
     /**
@@ -24045,6 +25961,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one CalculatedLineItem and a cursor during pagination.
+   * 
+   */
   export interface CalculatedLineItemEdge {
     
     /**
@@ -24058,6 +25978,10 @@ export interface AppUsagePricing {
     node: CalculatedLineItem;
   }
   
+  /**
+   * An auto-generated type for paginating through multiple OrderStagedChanges.
+   * 
+   */
   export interface OrderStagedChangeConnection {
     
     /**
@@ -24071,6 +25995,10 @@ export interface AppUsagePricing {
     pageInfo: PageInfo;
   }
   
+  /**
+   * An auto-generated type which holds one OrderStagedChange and a cursor during pagination.
+   * 
+   */
   export interface OrderStagedChangeEdge {
     
     /**
@@ -24082,6 +26010,53 @@ export interface AppUsagePricing {
      * The item at the end of OrderStagedChangeEdge.
      */
     node: OrderStagedChange;
+  }
+  
+  /**
+   * The input fields used to add a discount during an order edit.
+   */
+  export interface OrderEditAppliedDiscountInput {
+    
+    /**
+     * The description of the discount.
+     */
+    description?: string;
+    
+    /**
+     * The value of the discount as a fixed amount.
+     */
+    fixedValue?: MoneyInput;
+    
+    /**
+     * The value of the discount as a percentage.
+     */
+    percentValue?: number;
+  }
+  
+  /**
+   * Return type for `orderEditAddLineItemDiscount` mutation.
+   */
+  export interface OrderEditAddLineItemDiscountPayload {
+    
+    /**
+     * The staged change produced by this mutation.
+     */
+    addedDiscountStagedChange?: OrderStagedChangeAddLineItemDiscount;
+    
+    /**
+     * The line item with the discount applied.
+     */
+    calculatedLineItem?: CalculatedLineItem;
+    
+    /**
+     * An order with the edits calculated.
+     */
+    calculatedOrder?: CalculatedOrder;
+    
+    /**
+     * List of errors that occurred executing the mutation.
+     */
+    userErrors: Array<UserError>;
   }
   
   /**
@@ -24130,6 +26105,27 @@ export interface AppUsagePricing {
      * The order with changes applied.
      */
     order?: Order;
+    
+    /**
+     * List of errors that occurred executing the mutation.
+     */
+    userErrors: Array<UserError>;
+  }
+  
+  /**
+   * Return type for `orderEditRemoveLineItemDiscount` mutation.
+   */
+  export interface OrderEditRemoveLineItemDiscountPayload {
+    
+    /**
+     * The line item with the discount removed.
+     */
+    calculatedLineItem?: CalculatedLineItem;
+    
+    /**
+     * An order with the edits calculated.
+     */
+    calculatedOrder?: CalculatedOrder;
     
     /**
      * List of errors that occurred executing the mutation.
@@ -24233,7 +26229,7 @@ export interface AppUsagePricing {
     note?: string;
     
     /**
-     * The order tags.
+     * A comma separated list of tags that have been added to the order.
      */
     tags?: Array<string>;
     
@@ -24427,22 +26423,54 @@ export interface AppUsagePricing {
     CUSTOMER_SAVED_SEARCH_EXCEEDED_MAX = 'CUSTOMER_SAVED_SEARCH_EXCEEDED_MAX',
     CUSTOMER_SAVED_SEARCH_INVALID = 'CUSTOMER_SAVED_SEARCH_INVALID',
     DISCOUNT_CODE_DUPLICATE = 'DISCOUNT_CODE_DUPLICATE',
+    BOGO_INVALID_TARGET_SELECTION = 'BOGO_INVALID_TARGET_SELECTION',
+    BOGO_INVALID_TARGET_TYPE = 'BOGO_INVALID_TARGET_TYPE',
+    BOGO_INVALID_VALUE_TYPE = 'BOGO_INVALID_VALUE_TYPE',
+    
+    /**
+     * Allocation limit can only be set on buy one get one type discounts.
+     */
+    PRICE_RULE_ALLOCATION_LIMIT_ON_NON_BOGO = 'PRICE_RULE_ALLOCATION_LIMIT_ON_NON_BOGO',
+    
+    /**
+     * Allocation limit must be a non zero positive number.
+     */
+    PRICE_RULE_ALLOCATION_LIMIT_IS_ZERO = 'PRICE_RULE_ALLOCATION_LIMIT_IS_ZERO',
+    
+    /**
+     * Number of discount codes in the shop has reached its limit.
+     */
+    PRICE_RULE_EXCEEDED_MAX_DISCOUNT_CODE = 'PRICE_RULE_EXCEEDED_MAX_DISCOUNT_CODE',
+    
+    /**
+     * Number of discounts in the shop has reached its limit.
+     */
+    SHOP_EXCEEDED_MAX_PRICE_RULES = 'SHOP_EXCEEDED_MAX_PRICE_RULES',
+    
+    /**
+     * Discount end date must be after the start date.
+     */
+    END_DATE_BEFORE_START_DATE = 'END_DATE_BEFORE_START_DATE',
+    
+    /**
+     * Percentage value must be between 0 and -100.
+     */
+    PRICE_RULE_PERCENTAGE_VALUE_OUTSIDE_RANGE = 'PRICE_RULE_PERCENTAGE_VALUE_OUTSIDE_RANGE',
+    
+    /**
+     * Only one of minimum subtotal or minimum quantity condition can be defined.
+     */
+    PREREQUISITE_SUBTOTAL_AND_QUANTITY_RANGE_BOTH_PRESENT = 'PREREQUISITE_SUBTOTAL_AND_QUANTITY_RANGE_BOTH_PRESENT',
+    
+    /**
+     * Allocation method must be "across" for the provided target selection.
+     */
+    ALLOCATION_METHOD_MUST_BE_ACROSS_FOR_GIVEN_TARGET_SELECTION = 'ALLOCATION_METHOD_MUST_BE_ACROSS_FOR_GIVEN_TARGET_SELECTION',
     
     /**
      * Exceeds maximum number allowed.
      */
-    EXCEEDED_MAX = 'EXCEEDED_MAX',
-    BOGO_INVALID_TARGET_SELECTION = 'BOGO_INVALID_TARGET_SELECTION',
-    BOGO_INVALID_TARGET_TYPE = 'BOGO_INVALID_TARGET_TYPE',
-    BOGO_INVALID_VALUE_TYPE = 'BOGO_INVALID_VALUE_TYPE',
-    ALLOCATION_METHOD_MUST_BE_ACROSS_FOR_GIVEN_TARGET_SELECTION = 'ALLOCATION_METHOD_MUST_BE_ACROSS_FOR_GIVEN_TARGET_SELECTION',
-    END_DATE_BEFORE_START_DATE = 'END_DATE_BEFORE_START_DATE',
-    PREREQUISITE_SUBTOTAL_AND_QUANTITY_RANGE_BOTH_PRESENT = 'PREREQUISITE_SUBTOTAL_AND_QUANTITY_RANGE_BOTH_PRESENT',
-    PRICE_RULE_ALLOCATION_LIMIT_IS_ZERO = 'PRICE_RULE_ALLOCATION_LIMIT_IS_ZERO',
-    PRICE_RULE_ALLOCATION_LIMIT_ON_NON_BOGO = 'PRICE_RULE_ALLOCATION_LIMIT_ON_NON_BOGO',
-    PRICE_RULE_EXCEEDED_MAX_DISCOUNT_CODE = 'PRICE_RULE_EXCEEDED_MAX_DISCOUNT_CODE',
-    PRICE_RULE_PERCENTAGE_VALUE_OUTSIDE_RANGE = 'PRICE_RULE_PERCENTAGE_VALUE_OUTSIDE_RANGE',
-    SHOP_EXCEEDED_MAX_PRICE_RULES = 'SHOP_EXCEEDED_MAX_PRICE_RULES'
+    EXCEEDED_MAX = 'EXCEEDED_MAX'
   }
   
   /**
@@ -25008,6 +27036,54 @@ export interface AppUsagePricing {
   }
   
   /**
+   * Return type for `productChangeStatus` mutation.
+   */
+  export interface ProductChangeStatusPayload {
+    
+    /**
+     * The product object.
+     */
+    product?: Product;
+    
+    /**
+     * List of errors that occurred executing the mutation.
+     */
+    userErrors: Array<ProductChangeStatusUserError>;
+  }
+  
+  /**
+   * An error that occurs during the execution of ProductChangeStatus.
+   */
+  export interface ProductChangeStatusUserError extends DisplayableError {
+    
+    /**
+     * Error code to uniquely identify the error.
+     */
+    code?: ProductChangeStatusUserErrorCode;
+    
+    /**
+     * Path to the input field which caused the error.
+     */
+    field?: Array<string>;
+    
+    /**
+     * The error message.
+     */
+    message: string;
+  }
+  
+  /**
+   * Possible error codes that could be returned by ProductChangeStatusUserError.
+   */
+  export const enum ProductChangeStatusUserErrorCode {
+    
+    /**
+     * Product could not be found.
+     */
+    PRODUCT_NOT_FOUND = 'PRODUCT_NOT_FOUND'
+  }
+  
+  /**
    * Specifies the input fields required to create a product.
    */
   export interface ProductInput {
@@ -25041,7 +27117,7 @@ export interface AppUsagePricing {
     productType?: string;
     
     /**
-     * A list of the tags that have been added to the product.
+     * A comma separated list tags that have been added to the product.
      */
     tags?: Array<string>;
     
@@ -25086,7 +27162,7 @@ export interface AppUsagePricing {
     collectionsToLeave?: Array<string>;
     
     /**
-     * Specifies the product to update or create a new product if absent.
+     * Specifies the product to update in productUpdate or creates a new product if absent in productCreate.
      */
     id?: string;
     
@@ -25121,22 +27197,22 @@ export interface AppUsagePricing {
     publications?: Array<ProductPublicationInput>;
     
     /**
-     * This argument is deprecated: Use `PublishablePublish` instead.
+     * Only products with an active status can be published. This argument is deprecated: Use `PublishablePublish` instead.
      */
     publishDate?: DateTime;
     
     /**
-     * This argument is deprecated: Use `PublishablePublish` instead.
+     * Only products with an active status can be published. This argument is deprecated: Use `PublishablePublish` instead.
      */
     publishOn?: DateTime;
     
     /**
-     * This argument is deprecated: Use `PublishablePublish` instead.
+     * Only products with an active status can be published. This argument is deprecated: Use `PublishablePublish` instead.
      */
     published?: boolean;
     
     /**
-     * This argument is deprecated: Use `PublishablePublish` instead.
+     * Only products with an active status can be published. This argument is deprecated: Use `PublishablePublish` instead.
      */
     publishedAt?: DateTime;
     
@@ -25144,6 +27220,11 @@ export interface AppUsagePricing {
      * A list of variants associated with the product.
      */
     variants?: Array<ProductVariantInput>;
+    
+    /**
+     * The status of the product.
+     */
+    status?: ProductStatus;
   }
   
   /**
@@ -25212,6 +27293,11 @@ export interface AppUsagePricing {
      * 
      */
     imageSrc?: string;
+    
+    /**
+     * The URL of the media to associate with the variant. This field can only be used in mutations that create media images and must match one of the URLs being created on the product. This field only accepts one value.
+     */
+    mediaSrc?: Array<string>;
     
     /**
      * The fulfillment service that tracks the number of items in stock for the product variant. If you track the inventory yourself using the admin, then set the value to `shopify`. Valid values: `shopify` or the handle of a fulfillment service that has inventory management enabled.
@@ -25424,7 +27510,7 @@ export interface AppUsagePricing {
   }
   
   /**
-   * Possible error codes that could be returned by a media mutation.
+   * Possible error codes that could be returned by MediaUserError.
    */
   export const enum MediaUserErrorCode {
     
@@ -25432,6 +27518,11 @@ export interface AppUsagePricing {
      * Input value is invalid.
      */
     INVALID = 'INVALID',
+    
+    /**
+     * Input value is blank.
+     */
+    BLANK = 'BLANK',
     
     /**
      * Video validation failed.
@@ -25472,6 +27563,51 @@ export interface AppUsagePricing {
      * Media does not exist.
      */
     MEDIA_DOES_NOT_EXIST = 'MEDIA_DOES_NOT_EXIST',
+    
+    /**
+     * Media does not exist on the given product.
+     */
+    MEDIA_DOES_NOT_EXIST_ON_PRODUCT = 'MEDIA_DOES_NOT_EXIST_ON_PRODUCT',
+    
+    /**
+     * Only one mediaId is allowed per variant-media input pair.
+     */
+    TOO_MANY_MEDIA_PER_INPUT_PAIR = 'TOO_MANY_MEDIA_PER_INPUT_PAIR',
+    
+    /**
+     * Exceeded the maximum number of 100 variant-media pairs per mutation call.
+     */
+    MAXIMUM_VARIANT_MEDIA_PAIRS_EXCEEDED = 'MAXIMUM_VARIANT_MEDIA_PAIRS_EXCEEDED',
+    
+    /**
+     * Invalid media type.
+     */
+    INVALID_MEDIA_TYPE = 'INVALID_MEDIA_TYPE',
+    
+    /**
+     * Variant specified in more than one pair.
+     */
+    PRODUCT_VARIANT_SPECIFIED_MULTIPLE_TIMES = 'PRODUCT_VARIANT_SPECIFIED_MULTIPLE_TIMES',
+    
+    /**
+     * Variant does not exist on the given product.
+     */
+    PRODUCT_VARIANT_DOES_NOT_EXIST_ON_PRODUCT = 'PRODUCT_VARIANT_DOES_NOT_EXIST_ON_PRODUCT',
+    
+    /**
+     * Non-ready media are not supported.
+     */
+    NON_READY_MEDIA = 'NON_READY_MEDIA',
+    
+    /**
+     * Product variant already has attached media.
+     */
+    PRODUCT_VARIANT_ALREADY_HAS_MEDIA = 'PRODUCT_VARIANT_ALREADY_HAS_MEDIA',
+    
+    /**
+     * The specified media is not attached to the specified variant.
+     */
+    MEDIA_IS_NOT_ATTACHED_TO_VARIANT = 'MEDIA_IS_NOT_ATTACHED_TO_VARIANT',
     
     /**
      * Media cannot be modified. It is currently being modified by another operation.
@@ -25789,6 +27925,43 @@ export interface AppUsagePricing {
   }
   
   /**
+   * Specifies the input fields required to append media to a single variant.
+   */
+  export interface ProductVariantAppendMediaInput {
+    
+    /**
+     * Specifies the variant to which media will be appended.
+     */
+    variantId: string;
+    
+    /**
+     * Specifies the media to append to the variant.
+     */
+    mediaIds: Array<string>;
+  }
+  
+  /**
+   * Return type for `productVariantAppendMedia` mutation.
+   */
+  export interface ProductVariantAppendMediaPayload {
+    
+    /**
+     * The product associated with the variants and media.
+     */
+    product?: Product;
+    
+    /**
+     * The product variants that were updated.
+     */
+    productVariants?: Array<ProductVariant>;
+    
+    /**
+     * List of errors that occurred executing the mutation.
+     */
+    userErrors: Array<MediaUserError>;
+  }
+  
+  /**
    * Return type for `productVariantCreate` mutation.
    */
   export interface ProductVariantCreatePayload {
@@ -25831,6 +28004,43 @@ export interface AppUsagePricing {
   }
   
   /**
+   * Specifies the input fields required to detach media from a single variant.
+   */
+  export interface ProductVariantDetachMediaInput {
+    
+    /**
+     * Specifies the variant from which media will be detached.
+     */
+    variantId: string;
+    
+    /**
+     * Specifies the media to detach from the variant.
+     */
+    mediaIds: Array<string>;
+  }
+  
+  /**
+   * Return type for `productVariantDetachMedia` mutation.
+   */
+  export interface ProductVariantDetachMediaPayload {
+    
+    /**
+     * The product associated with the variants and media.
+     */
+    product?: Product;
+    
+    /**
+     * The product variants that were updated.
+     */
+    productVariants?: Array<ProductVariant>;
+    
+    /**
+     * List of errors that occurred executing the mutation.
+     */
+    userErrors: Array<MediaUserError>;
+  }
+  
+  /**
    * Return type for `productVariantUpdate` mutation.
    */
   export interface ProductVariantUpdatePayload {
@@ -25867,7 +28077,9 @@ export interface AppUsagePricing {
     publicationId?: string;
     
     /**
-     * The date and time that the product was (or will be) published.
+     * The date and time that the resource was published. Setting this to a date in the future will schedule
+     * the resource to be published. Only online store channels support future publishing.
+     * 
      */
     publishDate?: DateTime;
   }
@@ -25941,7 +28153,7 @@ export interface AppUsagePricing {
   export interface PublishableUnpublishToCurrentChannelPayload {
     
     /**
-     * Resource that has been published.
+     * Resource that has been unpublished.
      */
     publishable?: Publishable;
     
@@ -26337,6 +28549,70 @@ export interface AppUsagePricing {
      * List of errors that occurred executing the mutation.
      */
     userErrors: Array<UserError>;
+  }
+  
+  /**
+   * Specifies the input fields required to update a policy.
+   */
+  export interface ShopPolicyInput {
+    
+    /**
+     * The shop policy type.
+     */
+    type: ShopPolicyType;
+    
+    /**
+     * Policy text, maximum size of 512kb.
+     */
+    body: string;
+  }
+  
+  /**
+   * Return type for `shopPolicyUpdate` mutation.
+   */
+  export interface ShopPolicyUpdatePayload {
+    
+    /**
+     * The shop policy that has been updated.
+     */
+    shopPolicy?: ShopPolicy;
+    
+    /**
+     * List of errors that occurred executing the mutation.
+     */
+    userErrors: Array<ShopPolicyUserError>;
+  }
+  
+  /**
+   * An error that occurs during the execution of a shop policy mutation.
+   */
+  export interface ShopPolicyUserError extends DisplayableError {
+    
+    /**
+     * Error code to uniquely identify the error.
+     */
+    code?: ShopPolicyErrorCode;
+    
+    /**
+     * Path to the input field which caused the error.
+     */
+    field?: Array<string>;
+    
+    /**
+     * The error message.
+     */
+    message: string;
+  }
+  
+  /**
+   * Possible error codes that could be returned by ShopPolicyUserError.
+   */
+  export const enum ShopPolicyErrorCode {
+    
+    /**
+     * Input value is too big.
+     */
+    TOO_BIG = 'TOO_BIG'
   }
   
   /**
@@ -26777,7 +29053,7 @@ export interface AppUsagePricing {
   }
   
   /**
-   * Possible error codes that could be returned by a translation mutation.
+   * Possible error codes that could be returned by TranslationUserError.
    */
   export const enum TranslationErrorCode {
     
@@ -27006,6 +29282,186 @@ export interface AppUsagePricing {
   }
   
   /**
+   * Discount code applications capture the intentions of a discount code at
+   * the time that it is applied onto an order.
+   * 
+   */
+  export interface CalculatedAutomaticDiscountApplication extends CalculatedDiscountApplication {
+    
+    /**
+     * The method by which the discount's value is allocated to its entitled items.
+     */
+    allocationMethod: DiscountApplicationAllocationMethod;
+    
+    /**
+     * The level at which the discount was applied.
+     * 
+     */
+    appliedTo: DiscountApplicationLevel;
+    
+    /**
+     * The description of discount application. Indicates the reason why the discount was applied.
+     */
+    description?: string;
+    
+    /**
+     * Globally unique identifier.
+     */
+    id: string;
+    
+    /**
+     * How the discount amount is distributed on the discounted lines.
+     */
+    targetSelection: DiscountApplicationTargetSelection;
+    
+    /**
+     * Whether the discount is applied on line items or shipping lines.
+     */
+    targetType: DiscountApplicationTargetType;
+    
+    /**
+     * The value of the discount application.
+     */
+    value: PricingValue;
+  }
+  
+  /**
+   * Discount code applications capture the intentions of a discount code at
+   * the time that it is applied onto an order.
+   * 
+   */
+  export interface CalculatedDiscountCodeApplication extends CalculatedDiscountApplication {
+    
+    /**
+     * The method by which the discount's value is allocated to its entitled items.
+     */
+    allocationMethod: DiscountApplicationAllocationMethod;
+    
+    /**
+     * The level at which the discount was applied.
+     * 
+     */
+    appliedTo: DiscountApplicationLevel;
+    
+    /**
+     * The string identifying the discount code that was used at the time of application.
+     */
+    code: string;
+    
+    /**
+     * The description of discount application. Indicates the reason why the discount was applied.
+     */
+    description?: string;
+    
+    /**
+     * Globally unique identifier.
+     */
+    id: string;
+    
+    /**
+     * How the discount amount is distributed on the discounted lines.
+     */
+    targetSelection: DiscountApplicationTargetSelection;
+    
+    /**
+     * Whether the discount is applied on line items or shipping lines.
+     */
+    targetType: DiscountApplicationTargetType;
+    
+    /**
+     * The value of the discount application.
+     */
+    value: PricingValue;
+  }
+  
+  /**
+   * Manual discount applications capture the intentions of a discount that was manually created for an order.
+   * 
+   */
+  export interface CalculatedManualDiscountApplication extends CalculatedDiscountApplication {
+    
+    /**
+     * The method by which the discount's value is allocated to its entitled items.
+     */
+    allocationMethod: DiscountApplicationAllocationMethod;
+    
+    /**
+     * The level at which the discount was applied.
+     * 
+     */
+    appliedTo: DiscountApplicationLevel;
+    
+    /**
+     * The description of discount application. Indicates the reason why the discount was applied.
+     */
+    description?: string;
+    
+    /**
+     * Globally unique identifier.
+     */
+    id: string;
+    
+    /**
+     * How the discount amount is distributed on the discounted lines.
+     */
+    targetSelection: DiscountApplicationTargetSelection;
+    
+    /**
+     * Whether the discount is applied on line items or shipping lines.
+     */
+    targetType: DiscountApplicationTargetType;
+    
+    /**
+     * The value of the discount application.
+     */
+    value: PricingValue;
+  }
+  
+  /**
+   * Discount code applications capture the intentions of a discount code at
+   * the time that it is applied onto an order.
+   * 
+   */
+  export interface CalculatedScriptDiscountApplication extends CalculatedDiscountApplication {
+    
+    /**
+     * The method by which the discount's value is allocated to its entitled items.
+     */
+    allocationMethod: DiscountApplicationAllocationMethod;
+    
+    /**
+     * The level at which the discount was applied.
+     * 
+     */
+    appliedTo: DiscountApplicationLevel;
+    
+    /**
+     * The description of discount application. Indicates the reason why the discount was applied.
+     */
+    description?: string;
+    
+    /**
+     * Globally unique identifier.
+     */
+    id: string;
+    
+    /**
+     * How the discount amount is distributed on the discounted lines.
+     */
+    targetSelection: DiscountApplicationTargetSelection;
+    
+    /**
+     * Whether the discount is applied on line items or shipping lines.
+     */
+    targetType: DiscountApplicationTargetType;
+    
+    /**
+     * The value of the discount application.
+     */
+    value: PricingValue;
+  }
+  
+  /**
    * Comment events are generated by staff members of a shop.
    * They are created when a staff member adds a comment to the timeline of an order, draft order, customer, or transfer.
    * 
@@ -27123,25 +29579,25 @@ export interface AppUsagePricing {
    * The main embed of a comment event.
    */
   export type CommentEventEmbed =
-  Order |
-  DraftOrder |
   Customer |
+  DraftOrder |
+  Order |
   Product |
   ProductVariant;
   
   /** Use this to resolve union type CommentEventEmbed */
   export type PossibleCommentEventEmbedTypeNames =
-  'Order' |
-  'DraftOrder' |
   'Customer' |
+  'DraftOrder' |
+  'Order' |
   'Product' |
   'ProductVariant';
   
   export interface CommentEventEmbedNameMap {
     CommentEventEmbed: CommentEventEmbed;
-    Order: Order;
-    DraftOrder: DraftOrder;
     Customer: Customer;
+    DraftOrder: DraftOrder;
+    Order: Order;
     Product: Product;
     ProductVariant: ProductVariant;
   }
@@ -27304,6 +29760,11 @@ export interface AppUsagePricing {
     mediaErrors: Array<MediaError>;
     
     /**
+     * The MIME type of the image.
+     */
+    mimeType?: string;
+    
+    /**
      * The preview image for the media.
      */
     preview?: MediaPreviewImage;
@@ -27348,7 +29809,7 @@ export interface AppUsagePricing {
     /**
      * The original source for a 3d model.
      */
-    originalSource: Model3dSource;
+    originalSource?: Model3dSource;
     
     /**
      * The preview image for the media.
@@ -27686,10 +30147,10 @@ export interface AppUsagePricing {
       __resolveType: AppPricingDetailsTypeResolver
     };
     
-    AppUsagePricing?: AppUsagePricingTypeResolver;
+    AppRecurringPricing?: AppRecurringPricingTypeResolver;
     MoneyV2?: MoneyV2TypeResolver;
     Decimal?: GraphQLScalarType;
-    AppRecurringPricing?: AppRecurringPricingTypeResolver;
+    AppUsagePricing?: AppUsagePricingTypeResolver;
     AppUsageRecordConnection?: AppUsageRecordConnectionTypeResolver;
     AppUsageRecordEdge?: AppUsageRecordEdgeTypeResolver;
     AppUsageRecord?: AppUsageRecordTypeResolver;
@@ -27707,6 +30168,9 @@ export interface AppUsagePricing {
       __resolveType: PublishableTypeResolver
     };
     
+    ResourcePublicationV2Connection?: ResourcePublicationV2ConnectionTypeResolver;
+    ResourcePublicationV2Edge?: ResourcePublicationV2EdgeTypeResolver;
+    ResourcePublicationV2?: ResourcePublicationV2TypeResolver;
     ChannelConnection?: ChannelConnectionTypeResolver;
     ChannelEdge?: ChannelEdgeTypeResolver;
     PublicationConnection?: PublicationConnectionTypeResolver;
@@ -27736,6 +30200,7 @@ export interface AppUsagePricing {
     MediaEdge?: MediaEdgeTypeResolver;
     ProductOption?: ProductOptionTypeResolver;
     ProductPriceRange?: ProductPriceRangeTypeResolver;
+    ProductPriceRangeV2?: ProductPriceRangeV2TypeResolver;
     ProductPublicationConnection?: ProductPublicationConnectionTypeResolver;
     ProductPublicationEdge?: ProductPublicationEdgeTypeResolver;
     ProductPublication?: ProductPublicationTypeResolver;
@@ -27789,12 +30254,12 @@ export interface AppUsagePricing {
       __resolveType: DeliveryRateProviderTypeResolver
     };
     
-    DeliveryRateDefinition?: DeliveryRateDefinitionTypeResolver;
     DeliveryParticipant?: DeliveryParticipantTypeResolver;
     DeliveryCarrierService?: DeliveryCarrierServiceTypeResolver;
     DeliveryAvailableService?: DeliveryAvailableServiceTypeResolver;
     DeliveryCountryCodesOrRestOfWorld?: DeliveryCountryCodesOrRestOfWorldTypeResolver;
     DeliveryParticipantService?: DeliveryParticipantServiceTypeResolver;
+    DeliveryRateDefinition?: DeliveryRateDefinitionTypeResolver;
     DeliveryZone?: DeliveryZoneTypeResolver;
     ProductVariantPricePairConnection?: ProductVariantPricePairConnectionTypeResolver;
     ProductVariantPricePairEdge?: ProductVariantPricePairEdgeTypeResolver;
@@ -27821,6 +30286,33 @@ export interface AppUsagePricing {
       __resolveType: DiscountAutomaticTypeResolver
     };
     
+    DiscountAutomaticBasic?: DiscountAutomaticBasicTypeResolver;
+    DiscountCustomerGets?: DiscountCustomerGetsTypeResolver;
+    DiscountItems?: {
+      __resolveType: DiscountItemsTypeResolver
+    };
+    
+    AllDiscountItems?: AllDiscountItemsTypeResolver;
+    DiscountCollections?: DiscountCollectionsTypeResolver;
+    DiscountProducts?: DiscountProductsTypeResolver;
+    DiscountCustomerGetsValue?: {
+      __resolveType: DiscountCustomerGetsValueTypeResolver
+    };
+    
+    DiscountAmount?: DiscountAmountTypeResolver;
+    DiscountOnQuantity?: DiscountOnQuantityTypeResolver;
+    DiscountEffect?: {
+      __resolveType: DiscountEffectTypeResolver
+    };
+    
+    DiscountPercentage?: DiscountPercentageTypeResolver;
+    DiscountQuantity?: DiscountQuantityTypeResolver;
+    DiscountMinimumRequirement?: {
+      __resolveType: DiscountMinimumRequirementTypeResolver
+    };
+    
+    DiscountMinimumQuantity?: DiscountMinimumQuantityTypeResolver;
+    DiscountMinimumSubtotal?: DiscountMinimumSubtotalTypeResolver;
     DiscountAutomaticBxgy?: DiscountAutomaticBxgyTypeResolver;
     HasEvents?: {
       __resolveType: HasEventsTypeResolver
@@ -27833,38 +30325,11 @@ export interface AppUsagePricing {
     };
     
     DiscountCustomerBuys?: DiscountCustomerBuysTypeResolver;
-    DiscountItems?: {
-      __resolveType: DiscountItemsTypeResolver
-    };
-    
-    AllDiscountItems?: AllDiscountItemsTypeResolver;
-    DiscountProducts?: DiscountProductsTypeResolver;
-    DiscountCollections?: DiscountCollectionsTypeResolver;
     DiscountCustomerBuysValue?: {
       __resolveType: DiscountCustomerBuysValueTypeResolver
     };
     
-    DiscountQuantity?: DiscountQuantityTypeResolver;
     DiscountPurchaseAmount?: DiscountPurchaseAmountTypeResolver;
-    DiscountCustomerGets?: DiscountCustomerGetsTypeResolver;
-    DiscountCustomerGetsValue?: {
-      __resolveType: DiscountCustomerGetsValueTypeResolver
-    };
-    
-    DiscountOnQuantity?: DiscountOnQuantityTypeResolver;
-    DiscountEffect?: {
-      __resolveType: DiscountEffectTypeResolver
-    };
-    
-    DiscountPercentage?: DiscountPercentageTypeResolver;
-    DiscountAmount?: DiscountAmountTypeResolver;
-    DiscountAutomaticBasic?: DiscountAutomaticBasicTypeResolver;
-    DiscountMinimumRequirement?: {
-      __resolveType: DiscountMinimumRequirementTypeResolver
-    };
-    
-    DiscountMinimumQuantity?: DiscountMinimumQuantityTypeResolver;
-    DiscountMinimumSubtotal?: DiscountMinimumSubtotalTypeResolver;
     DiscountAutomaticNode?: DiscountAutomaticNodeTypeResolver;
     DiscountAutomaticNodeConnection?: DiscountAutomaticNodeConnectionTypeResolver;
     DiscountAutomaticNodeEdge?: DiscountAutomaticNodeEdgeTypeResolver;
@@ -27890,6 +30355,7 @@ export interface AppUsagePricing {
     };
     
     DiscountCustomerAll?: DiscountCustomerAllTypeResolver;
+    DiscountCustomerSavedSearches?: DiscountCustomerSavedSearchesTypeResolver;
     DiscountCustomers?: DiscountCustomersTypeResolver;
     Customer?: CustomerTypeResolver;
     CommentEventSubject?: {
@@ -27898,9 +30364,17 @@ export interface AppUsagePricing {
     
     MailingAddress?: MailingAddressTypeResolver;
     Order?: OrderTypeResolver;
+    HasLocalizationExtensions?: {
+      __resolveType: HasLocalizationExtensionsTypeResolver
+    };
+    
+    LocalizationExtensionConnection?: LocalizationExtensionConnectionTypeResolver;
+    LocalizationExtensionEdge?: LocalizationExtensionEdgeTypeResolver;
+    LocalizationExtension?: LocalizationExtensionTypeResolver;
     ResourceAlert?: ResourceAlertTypeResolver;
     ResourceAlertAction?: ResourceAlertActionTypeResolver;
     MoneyBag?: MoneyBagTypeResolver;
+    TaxLine?: TaxLineTypeResolver;
     Attribute?: AttributeTypeResolver;
     CustomerJourney?: CustomerJourneyTypeResolver;
     CustomerVisit?: CustomerVisitTypeResolver;
@@ -27910,6 +30384,9 @@ export interface AppUsagePricing {
     
     MarketingEvent?: MarketingEventTypeResolver;
     UTMParameters?: UTMParametersTypeResolver;
+    CustomerJourneySummary?: CustomerJourneySummaryTypeResolver;
+    CustomerMomentConnection?: CustomerMomentConnectionTypeResolver;
+    CustomerMomentEdge?: CustomerMomentEdgeTypeResolver;
     DiscountApplicationConnection?: DiscountApplicationConnectionTypeResolver;
     DiscountApplicationEdge?: DiscountApplicationEdgeTypeResolver;
     DiscountApplication?: {
@@ -27926,11 +30403,11 @@ export interface AppUsagePricing {
     LineItem?: LineItemTypeResolver;
     DiscountAllocation?: DiscountAllocationTypeResolver;
     Duty?: DutyTypeResolver;
-    TaxLine?: TaxLineTypeResolver;
     FulfillmentOrderConnection?: FulfillmentOrderConnectionTypeResolver;
     FulfillmentOrderEdge?: FulfillmentOrderEdgeTypeResolver;
     FulfillmentOrder?: FulfillmentOrderTypeResolver;
     FulfillmentOrderAssignedLocation?: FulfillmentOrderAssignedLocationTypeResolver;
+    DeliveryMethod?: DeliveryMethodTypeResolver;
     FulfillmentOrderDestination?: FulfillmentOrderDestinationTypeResolver;
     FulfillmentConnection?: FulfillmentConnectionTypeResolver;
     FulfillmentEdge?: FulfillmentEdgeTypeResolver;
@@ -27969,20 +30446,22 @@ export interface AppUsagePricing {
     OrderTransaction?: OrderTransactionTypeResolver;
     OrderRisk?: OrderRiskTypeResolver;
     ShippingLine?: ShippingLineTypeResolver;
+    ShippingLineConnection?: ShippingLineConnectionTypeResolver;
+    ShippingLineEdge?: ShippingLineEdgeTypeResolver;
     SuggestedRefund?: SuggestedRefundTypeResolver;
     ShippingRefund?: ShippingRefundTypeResolver;
     SuggestedOrderTransaction?: SuggestedOrderTransactionTypeResolver;
     OrderConnection?: OrderConnectionTypeResolver;
     OrderEdge?: OrderEdgeTypeResolver;
-    DiscountCustomerSavedSearches?: DiscountCustomerSavedSearchesTypeResolver;
+    DiscountShareableUrl?: DiscountShareableUrlTypeResolver;
     DiscountCodeBxgy?: DiscountCodeBxgyTypeResolver;
     DiscountCodeFreeShipping?: DiscountCodeFreeShippingTypeResolver;
     DiscountShippingDestinationSelection?: {
       __resolveType: DiscountShippingDestinationSelectionTypeResolver
     };
     
-    DiscountCountryAll?: DiscountCountryAllTypeResolver;
     DiscountCountries?: DiscountCountriesTypeResolver;
+    DiscountCountryAll?: DiscountCountryAllTypeResolver;
     DiscountCodeNodeConnection?: DiscountCodeNodeConnectionTypeResolver;
     DiscountCodeNodeEdge?: DiscountCodeNodeEdgeTypeResolver;
     CollectionRuleConditions?: CollectionRuleConditionsTypeResolver;
@@ -27997,6 +30476,7 @@ export interface AppUsagePricing {
     DeliverySetting?: DeliverySettingTypeResolver;
     DeliveryLegacyModeBlocked?: DeliveryLegacyModeBlockedTypeResolver;
     Domain?: DomainTypeResolver;
+    DomainLocalization?: DomainLocalizationTypeResolver;
     DraftOrder?: DraftOrderTypeResolver;
     DraftOrderAppliedDiscount?: DraftOrderAppliedDiscountTypeResolver;
     DraftOrderLineItemConnection?: DraftOrderLineItemConnectionTypeResolver;
@@ -28035,8 +30515,8 @@ export interface AppUsagePricing {
       __resolveType: PriceRuleValueTypeResolver
     };
     
-    PriceRulePercentValue?: PriceRulePercentValueTypeResolver;
     PriceRuleFixedAmountValue?: PriceRuleFixedAmountValueTypeResolver;
+    PriceRulePercentValue?: PriceRulePercentValueTypeResolver;
     PriceRuleConnection?: PriceRuleConnectionTypeResolver;
     PriceRuleEdge?: PriceRuleEdgeTypeResolver;
     ApiVersion?: ApiVersionTypeResolver;
@@ -28066,6 +30546,7 @@ export interface AppUsagePricing {
     SearchResult?: SearchResultTypeResolver;
     SearchFilterOptions?: SearchFilterOptionsTypeResolver;
     FilterOption?: FilterOptionTypeResolver;
+    ShopPolicy?: ShopPolicyTypeResolver;
     ShopifyPaymentsAccount?: ShopifyPaymentsAccountTypeResolver;
     ShopifyPaymentsBankAccountConnection?: ShopifyPaymentsBankAccountConnectionTypeResolver;
     ShopifyPaymentsBankAccountEdge?: ShopifyPaymentsBankAccountEdgeTypeResolver;
@@ -28107,6 +30588,13 @@ export interface AppUsagePricing {
     TranslatableResourceConnection?: TranslatableResourceConnectionTypeResolver;
     TranslatableResourceEdge?: TranslatableResourceEdgeTypeResolver;
     WebhookSubscription?: WebhookSubscriptionTypeResolver;
+    WebhookSubscriptionEndpoint?: {
+      __resolveType: WebhookSubscriptionEndpointTypeResolver
+    };
+    
+    WebhookEventBridgeEndpoint?: WebhookEventBridgeEndpointTypeResolver;
+    ARN?: GraphQLScalarType;
+    WebhookHttpEndpoint?: WebhookHttpEndpointTypeResolver;
     WebhookSubscriptionConnection?: WebhookSubscriptionConnectionTypeResolver;
     WebhookSubscriptionEdge?: WebhookSubscriptionEdgeTypeResolver;
     Mutation?: MutationTypeResolver;
@@ -28151,12 +30639,16 @@ export interface AppUsagePricing {
     DiscountCodeActivatePayload?: DiscountCodeActivatePayloadTypeResolver;
     DiscountCodeBasicCreatePayload?: DiscountCodeBasicCreatePayloadTypeResolver;
     DiscountCodeBasicUpdatePayload?: DiscountCodeBasicUpdatePayloadTypeResolver;
+    DiscountCodeBulkActivatePayload?: DiscountCodeBulkActivatePayloadTypeResolver;
+    DiscountCodeBulkDeactivatePayload?: DiscountCodeBulkDeactivatePayloadTypeResolver;
+    DiscountCodeBulkDeletePayload?: DiscountCodeBulkDeletePayloadTypeResolver;
     DiscountCodeBxgyCreatePayload?: DiscountCodeBxgyCreatePayloadTypeResolver;
     DiscountCodeBxgyUpdatePayload?: DiscountCodeBxgyUpdatePayloadTypeResolver;
     DiscountCodeDeactivatePayload?: DiscountCodeDeactivatePayloadTypeResolver;
     DiscountCodeDeletePayload?: DiscountCodeDeletePayloadTypeResolver;
     DiscountCodeFreeShippingCreatePayload?: DiscountCodeFreeShippingCreatePayloadTypeResolver;
     DiscountCodeFreeShippingUpdatePayload?: DiscountCodeFreeShippingUpdatePayloadTypeResolver;
+    DiscountCodeRedeemCodeBulkDeletePayload?: DiscountCodeRedeemCodeBulkDeletePayloadTypeResolver;
     DraftOrderCalculatePayload?: DraftOrderCalculatePayloadTypeResolver;
     CalculatedDraftOrder?: CalculatedDraftOrderTypeResolver;
     ShippingRate?: ShippingRateTypeResolver;
@@ -28167,6 +30659,8 @@ export interface AppUsagePricing {
     DraftOrderInvoicePreviewPayload?: DraftOrderInvoicePreviewPayloadTypeResolver;
     DraftOrderInvoiceSendPayload?: DraftOrderInvoiceSendPayloadTypeResolver;
     DraftOrderUpdatePayload?: DraftOrderUpdatePayloadTypeResolver;
+    EventBridgeWebhookSubscriptionCreatePayload?: EventBridgeWebhookSubscriptionCreatePayloadTypeResolver;
+    EventBridgeWebhookSubscriptionUpdatePayload?: EventBridgeWebhookSubscriptionUpdatePayloadTypeResolver;
     FlowTriggerReceivePayload?: FlowTriggerReceivePayloadTypeResolver;
     FulfillmentCancelPayload?: FulfillmentCancelPayloadTypeResolver;
     FulfillmentCreatePayload?: FulfillmentCreatePayloadTypeResolver;
@@ -28191,6 +30685,7 @@ export interface AppUsagePricing {
     InventoryDeactivatePayload?: InventoryDeactivatePayloadTypeResolver;
     InventoryItemUpdatePayload?: InventoryItemUpdatePayloadTypeResolver;
     KitSkillTriggerRequestPayload?: KitSkillTriggerRequestPayloadTypeResolver;
+    MarketingActivityCreatePayload?: MarketingActivityCreatePayloadTypeResolver;
     MarketingActivityUpdatePayload?: MarketingActivityUpdatePayloadTypeResolver;
     UtcOffset?: GraphQLScalarType;
     MarketingEngagementCreatePayload?: MarketingEngagementCreatePayloadTypeResolver;
@@ -28202,22 +30697,33 @@ export interface AppUsagePricing {
     OrderClosePayload?: OrderClosePayloadTypeResolver;
     OrderEditAddCustomItemPayload?: OrderEditAddCustomItemPayloadTypeResolver;
     CalculatedLineItem?: CalculatedLineItemTypeResolver;
+    CalculatedDiscountAllocation?: CalculatedDiscountAllocationTypeResolver;
+    CalculatedDiscountApplication?: {
+      __resolveType: CalculatedDiscountApplicationTypeResolver
+    };
+    
     OrderStagedChange?: {
       __resolveType: OrderStagedChangeTypeResolver
     };
     
     OrderStagedChangeAddCustomItem?: OrderStagedChangeAddCustomItemTypeResolver;
+    OrderStagedChangeAddLineItemDiscount?: OrderStagedChangeAddLineItemDiscountTypeResolver;
+    OrderStagedChangeAddShippingLine?: OrderStagedChangeAddShippingLineTypeResolver;
     OrderStagedChangeAddVariant?: OrderStagedChangeAddVariantTypeResolver;
-    OrderStagedChangeIncrementItem?: OrderStagedChangeIncrementItemTypeResolver;
     OrderStagedChangeDecrementItem?: OrderStagedChangeDecrementItemTypeResolver;
+    OrderStagedChangeIncrementItem?: OrderStagedChangeIncrementItemTypeResolver;
     CalculatedOrder?: CalculatedOrderTypeResolver;
+    CalculatedDiscountApplicationConnection?: CalculatedDiscountApplicationConnectionTypeResolver;
+    CalculatedDiscountApplicationEdge?: CalculatedDiscountApplicationEdgeTypeResolver;
     CalculatedLineItemConnection?: CalculatedLineItemConnectionTypeResolver;
     CalculatedLineItemEdge?: CalculatedLineItemEdgeTypeResolver;
     OrderStagedChangeConnection?: OrderStagedChangeConnectionTypeResolver;
     OrderStagedChangeEdge?: OrderStagedChangeEdgeTypeResolver;
+    OrderEditAddLineItemDiscountPayload?: OrderEditAddLineItemDiscountPayloadTypeResolver;
     OrderEditAddVariantPayload?: OrderEditAddVariantPayloadTypeResolver;
     OrderEditBeginPayload?: OrderEditBeginPayloadTypeResolver;
     OrderEditCommitPayload?: OrderEditCommitPayloadTypeResolver;
+    OrderEditRemoveLineItemDiscountPayload?: OrderEditRemoveLineItemDiscountPayloadTypeResolver;
     OrderEditSetQuantityPayload?: OrderEditSetQuantityPayloadTypeResolver;
     OrderMarkAsPaidPayload?: OrderMarkAsPaidPayloadTypeResolver;
     OrderOpenPayload?: OrderOpenPayloadTypeResolver;
@@ -28233,6 +30739,8 @@ export interface AppUsagePricing {
     PrivateMetafieldDeletePayload?: PrivateMetafieldDeletePayloadTypeResolver;
     PrivateMetafieldUpsertPayload?: PrivateMetafieldUpsertPayloadTypeResolver;
     ProductAppendImagesPayload?: ProductAppendImagesPayloadTypeResolver;
+    ProductChangeStatusPayload?: ProductChangeStatusPayloadTypeResolver;
+    ProductChangeStatusUserError?: ProductChangeStatusUserErrorTypeResolver;
     ProductCreatePayload?: ProductCreatePayloadTypeResolver;
     ProductCreateMediaPayload?: ProductCreateMediaPayloadTypeResolver;
     MediaUserError?: MediaUserErrorTypeResolver;
@@ -28247,8 +30755,10 @@ export interface AppUsagePricing {
     ProductUnpublishPayload?: ProductUnpublishPayloadTypeResolver;
     ProductUpdatePayload?: ProductUpdatePayloadTypeResolver;
     ProductUpdateMediaPayload?: ProductUpdateMediaPayloadTypeResolver;
+    ProductVariantAppendMediaPayload?: ProductVariantAppendMediaPayloadTypeResolver;
     ProductVariantCreatePayload?: ProductVariantCreatePayloadTypeResolver;
     ProductVariantDeletePayload?: ProductVariantDeletePayloadTypeResolver;
+    ProductVariantDetachMediaPayload?: ProductVariantDetachMediaPayloadTypeResolver;
     ProductVariantUpdatePayload?: ProductVariantUpdatePayloadTypeResolver;
     PublishablePublishPayload?: PublishablePublishPayloadTypeResolver;
     PublishablePublishToCurrentChannelPayload?: PublishablePublishToCurrentChannelPayloadTypeResolver;
@@ -28267,6 +30777,8 @@ export interface AppUsagePricing {
     ShopLocaleDisablePayload?: ShopLocaleDisablePayloadTypeResolver;
     ShopLocaleEnablePayload?: ShopLocaleEnablePayloadTypeResolver;
     ShopLocaleUpdatePayload?: ShopLocaleUpdatePayloadTypeResolver;
+    ShopPolicyUpdatePayload?: ShopPolicyUpdatePayloadTypeResolver;
+    ShopPolicyUserError?: ShopPolicyUserErrorTypeResolver;
     StagedUploadTargetGeneratePayload?: StagedUploadTargetGeneratePayloadTypeResolver;
     MutationsStagedUploadTargetGenerateUploadParameter?: MutationsStagedUploadTargetGenerateUploadParameterTypeResolver;
     StagedUploadTargetsGeneratePayload?: StagedUploadTargetsGeneratePayloadTypeResolver;
@@ -28287,6 +30799,10 @@ export interface AppUsagePricing {
     WebhookSubscriptionUpdatePayload?: WebhookSubscriptionUpdatePayloadTypeResolver;
     AutomaticDiscountApplication?: AutomaticDiscountApplicationTypeResolver;
     BasicEvent?: BasicEventTypeResolver;
+    CalculatedAutomaticDiscountApplication?: CalculatedAutomaticDiscountApplicationTypeResolver;
+    CalculatedDiscountCodeApplication?: CalculatedDiscountCodeApplicationTypeResolver;
+    CalculatedManualDiscountApplication?: CalculatedManualDiscountApplicationTypeResolver;
+    CalculatedScriptDiscountApplication?: CalculatedScriptDiscountApplicationTypeResolver;
     CommentEvent?: CommentEventTypeResolver;
     CommentEventAttachment?: CommentEventAttachmentTypeResolver;
     CommentEventEmbed?: {
@@ -28342,6 +30858,7 @@ export interface AppUsagePricing {
     deliveryProfile?: QueryRootToDeliveryProfileResolver<TParent>;
     deliveryProfiles?: QueryRootToDeliveryProfilesResolver<TParent>;
     deliverySettings?: QueryRootToDeliverySettingsResolver<TParent>;
+    discountRedeemCodeSavedSearches?: QueryRootToDiscountRedeemCodeSavedSearchesResolver<TParent>;
     domain?: QueryRootToDomainResolver<TParent>;
     draftOrder?: QueryRootToDraftOrderResolver<TParent>;
     draftOrderSavedSearches?: QueryRootToDraftOrderSavedSearchesResolver<TParent>;
@@ -28681,6 +31198,19 @@ export interface AppUsagePricing {
   
   export interface QueryRootToDeliverySettingsResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface QueryRootToDiscountRedeemCodeSavedSearchesArgs {
+    first?: number;
+    after?: string;
+    last?: number;
+    before?: string;
+    reverse?: boolean;
+    sortKey?: DiscountCodeSortKeys;
+    query?: string;
+  }
+  export interface QueryRootToDiscountRedeemCodeSavedSearchesResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: QueryRootToDiscountRedeemCodeSavedSearchesArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface QueryRootToDomainArgs {
@@ -29286,7 +31816,7 @@ export interface AppUsagePricing {
   }
   
   export interface NodeTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'App' | 'Metafield' | 'PrivateMetafield' | 'AppInstallation' | 'AppSubscription' | 'AppUsageRecord' | 'Channel' | 'Publication' | 'Collection' | 'Product' | 'ProductOption' | 'ProductVariant' | 'DeliveryProfile' | 'DeliveryCountry' | 'DeliveryProvince' | 'DeliveryLocationGroup' | 'Location' | 'InventoryLevel' | 'InventoryItem' | 'DeliveryMethodDefinition' | 'DeliveryCondition' | 'DeliveryRateDefinition' | 'DeliveryParticipant' | 'DeliveryCarrierService' | 'DeliveryZone' | 'AppCredit' | 'AppPurchaseOneTime' | 'DiscountAutomaticBxgy' | 'DiscountAutomaticNode' | 'SavedSearch' | 'DiscountCodeNode' | 'Customer' | 'MailingAddress' | 'Order' | 'CustomerVisit' | 'MarketingEvent' | 'OrderDisputeSummary' | 'LineItem' | 'Duty' | 'FulfillmentOrder' | 'FulfillmentOrderDestination' | 'Fulfillment' | 'FulfillmentEvent' | 'FulfillmentLineItem' | 'FulfillmentOrderLineItem' | 'FulfillmentOrderMerchantRequest' | 'LineItemMutable' | 'Refund' | 'OrderTransaction' | 'BulkOperation' | 'Domain' | 'DraftOrder' | 'DraftOrderLineItem' | 'MarketingActivity' | 'MetafieldStorefrontVisibility' | 'PriceRule' | 'PriceRuleDiscountCode' | 'ScriptTag' | 'Shop' | 'ShopifyPaymentsAccount' | 'ShopifyPaymentsBankAccount' | 'ShopifyPaymentsPayout' | 'ShopifyPaymentsDispute' | 'ShopifyPaymentsVerification' | 'StorefrontAccessToken' | 'TenderTransaction' | 'WebhookSubscription' | 'CalculatedOrder' | 'BasicEvent' | 'CommentEvent' | 'ExternalVideo' | 'MediaImage' | 'Model3d' | 'OnlineStoreArticle' | 'OnlineStoreBlog' | 'OnlineStorePage' | 'Video';
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'App' | 'Metafield' | 'PrivateMetafield' | 'AppInstallation' | 'AppSubscription' | 'AppUsageRecord' | 'Channel' | 'Publication' | 'Collection' | 'Product' | 'ProductOption' | 'ProductVariant' | 'DeliveryProfile' | 'DeliveryCountry' | 'DeliveryProvince' | 'DeliveryLocationGroup' | 'Location' | 'InventoryLevel' | 'InventoryItem' | 'DeliveryMethodDefinition' | 'DeliveryCondition' | 'DeliveryParticipant' | 'DeliveryCarrierService' | 'DeliveryRateDefinition' | 'DeliveryZone' | 'AppCredit' | 'AppPurchaseOneTime' | 'DiscountAutomaticBxgy' | 'DiscountAutomaticNode' | 'SavedSearch' | 'DiscountCodeNode' | 'Customer' | 'MailingAddress' | 'Order' | 'CustomerVisit' | 'MarketingEvent' | 'OrderDisputeSummary' | 'LineItem' | 'Duty' | 'FulfillmentOrder' | 'DeliveryMethod' | 'FulfillmentOrderDestination' | 'Fulfillment' | 'FulfillmentEvent' | 'FulfillmentLineItem' | 'FulfillmentOrderLineItem' | 'FulfillmentOrderMerchantRequest' | 'LineItemMutable' | 'Refund' | 'OrderTransaction' | 'BulkOperation' | 'Domain' | 'DraftOrder' | 'DraftOrderLineItem' | 'MarketingActivity' | 'MetafieldStorefrontVisibility' | 'PriceRule' | 'PriceRuleDiscountCode' | 'ScriptTag' | 'Shop' | 'ShopPolicy' | 'ShopifyPaymentsAccount' | 'ShopifyPaymentsBankAccount' | 'ShopifyPaymentsPayout' | 'ShopifyPaymentsDispute' | 'ShopifyPaymentsVerification' | 'StorefrontAccessToken' | 'TenderTransaction' | 'WebhookSubscription' | 'CalculatedOrder' | 'BasicEvent' | 'CommentEvent' | 'ExternalVideo' | 'MediaImage' | 'Model3d' | 'OnlineStoreArticle' | 'OnlineStoreBlog' | 'OnlineStorePage' | 'Video';
   }
   export interface ImageTypeResolver<TParent = any> {
     altText?: ImageToAltTextResolver<TParent>;
@@ -29600,7 +32130,7 @@ export interface AppUsagePricing {
   }
   
   export interface HasPublishedTranslationsTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'Link' | 'Collection' | 'Product' | 'ProductOption' | 'ProductVariant' | 'Shop' | 'OnlineStoreArticle' | 'OnlineStoreBlog' | 'OnlineStorePage';
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'Link' | 'Collection' | 'Product' | 'ProductOption' | 'ProductVariant' | 'Shop' | 'ShopPolicy' | 'OnlineStoreArticle' | 'OnlineStoreBlog' | 'OnlineStorePage';
   }
   export interface PublishedTranslationTypeResolver<TParent = any> {
     key?: PublishedTranslationToKeyResolver<TParent>;
@@ -29634,7 +32164,7 @@ export interface AppUsagePricing {
   }
   
   export interface DisplayableErrorTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'UserError' | 'DiscountUserError' | 'PriceRuleUserError' | 'MediaUserError' | 'TranslationUserError';
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'UserError' | 'DiscountUserError' | 'PriceRuleUserError' | 'ProductChangeStatusUserError' | 'MediaUserError' | 'ShopPolicyUserError' | 'TranslationUserError';
   }
   export interface AppInstallationTypeResolver<TParent = any> {
     accessScopes?: AppInstallationToAccessScopesResolver<TParent>;
@@ -29819,8 +32349,34 @@ export interface AppUsagePricing {
   }
   
   export interface AppPricingDetailsTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'AppUsagePricing' | 'AppRecurringPricing';
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'AppRecurringPricing' | 'AppUsagePricing';
   }
+  export interface AppRecurringPricingTypeResolver<TParent = any> {
+    interval?: AppRecurringPricingToIntervalResolver<TParent>;
+    price?: AppRecurringPricingToPriceResolver<TParent>;
+  }
+  
+  export interface AppRecurringPricingToIntervalResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface AppRecurringPricingToPriceResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MoneyV2TypeResolver<TParent = any> {
+    amount?: MoneyV2ToAmountResolver<TParent>;
+    currencyCode?: MoneyV2ToCurrencyCodeResolver<TParent>;
+  }
+  
+  export interface MoneyV2ToAmountResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MoneyV2ToCurrencyCodeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface AppUsagePricingTypeResolver<TParent = any> {
     balanceUsed?: AppUsagePricingToBalanceUsedResolver<TParent>;
     cappedAmount?: AppUsagePricingToCappedAmountResolver<TParent>;
@@ -29841,32 +32397,6 @@ export interface AppUsagePricing {
   }
   
   export interface AppUsagePricingToTermsResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface MoneyV2TypeResolver<TParent = any> {
-    amount?: MoneyV2ToAmountResolver<TParent>;
-    currencyCode?: MoneyV2ToCurrencyCodeResolver<TParent>;
-  }
-  
-  export interface MoneyV2ToAmountResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface MoneyV2ToCurrencyCodeResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface AppRecurringPricingTypeResolver<TParent = any> {
-    interval?: AppRecurringPricingToIntervalResolver<TParent>;
-    price?: AppRecurringPricingToPriceResolver<TParent>;
-  }
-  
-  export interface AppRecurringPricingToIntervalResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface AppRecurringPricingToPriceResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -30237,6 +32767,7 @@ export interface AppUsagePricing {
     publishedOnCurrentPublication?: CollectionToPublishedOnCurrentPublicationResolver<TParent>;
     publishedOnPublication?: CollectionToPublishedOnPublicationResolver<TParent>;
     resourcePublications?: CollectionToResourcePublicationsResolver<TParent>;
+    resourcePublicationsV2?: CollectionToResourcePublicationsV2Resolver<TParent>;
     ruleSet?: CollectionToRuleSetResolver<TParent>;
     seo?: CollectionToSeoResolver<TParent>;
     sortOrder?: CollectionToSortOrderResolver<TParent>;
@@ -30403,6 +32934,18 @@ export interface AppUsagePricing {
     (parent: TParent, args: CollectionToResourcePublicationsArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface CollectionToResourcePublicationsV2Args {
+    onlyPublished?: boolean;
+    first?: number;
+    after?: string;
+    last?: number;
+    before?: string;
+    reverse?: boolean;
+  }
+  export interface CollectionToResourcePublicationsV2Resolver<TParent = any, TResult = any> {
+    (parent: TParent, args: CollectionToResourcePublicationsV2Args, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface CollectionToRuleSetResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
@@ -30463,6 +33006,55 @@ export interface AppUsagePricing {
   export interface PublishableTypeResolver<TParent = any> {
     (parent: TParent, context: any, info: GraphQLResolveInfo): 'Collection' | 'Product';
   }
+  export interface ResourcePublicationV2ConnectionTypeResolver<TParent = any> {
+    edges?: ResourcePublicationV2ConnectionToEdgesResolver<TParent>;
+    pageInfo?: ResourcePublicationV2ConnectionToPageInfoResolver<TParent>;
+  }
+  
+  export interface ResourcePublicationV2ConnectionToEdgesResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ResourcePublicationV2ConnectionToPageInfoResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ResourcePublicationV2EdgeTypeResolver<TParent = any> {
+    cursor?: ResourcePublicationV2EdgeToCursorResolver<TParent>;
+    node?: ResourcePublicationV2EdgeToNodeResolver<TParent>;
+  }
+  
+  export interface ResourcePublicationV2EdgeToCursorResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ResourcePublicationV2EdgeToNodeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ResourcePublicationV2TypeResolver<TParent = any> {
+    isPublished?: ResourcePublicationV2ToIsPublishedResolver<TParent>;
+    publication?: ResourcePublicationV2ToPublicationResolver<TParent>;
+    publishDate?: ResourcePublicationV2ToPublishDateResolver<TParent>;
+    publishable?: ResourcePublicationV2ToPublishableResolver<TParent>;
+  }
+  
+  export interface ResourcePublicationV2ToIsPublishedResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ResourcePublicationV2ToPublicationResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ResourcePublicationV2ToPublishDateResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ResourcePublicationV2ToPublishableResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface ChannelConnectionTypeResolver<TParent = any> {
     edges?: ChannelConnectionToEdgesResolver<TParent>;
     pageInfo?: ChannelConnectionToPageInfoResolver<TParent>;
@@ -30588,6 +33180,7 @@ export interface AppUsagePricing {
     onlineStoreUrl?: ProductToOnlineStoreUrlResolver<TParent>;
     options?: ProductToOptionsResolver<TParent>;
     priceRange?: ProductToPriceRangeResolver<TParent>;
+    priceRangeV2?: ProductToPriceRangeV2Resolver<TParent>;
     privateMetafield?: ProductToPrivateMetafieldResolver<TParent>;
     privateMetafields?: ProductToPrivateMetafieldsResolver<TParent>;
     productPublications?: ProductToProductPublicationsResolver<TParent>;
@@ -30600,7 +33193,9 @@ export interface AppUsagePricing {
     publishedOnCurrentPublication?: ProductToPublishedOnCurrentPublicationResolver<TParent>;
     publishedOnPublication?: ProductToPublishedOnPublicationResolver<TParent>;
     resourcePublications?: ProductToResourcePublicationsResolver<TParent>;
+    resourcePublicationsV2?: ProductToResourcePublicationsV2Resolver<TParent>;
     seo?: ProductToSeoResolver<TParent>;
+    status?: ProductToStatusResolver<TParent>;
     storefrontId?: ProductToStorefrontIdResolver<TParent>;
     tags?: ProductToTagsResolver<TParent>;
     templateSuffix?: ProductToTemplateSuffixResolver<TParent>;
@@ -30778,6 +33373,10 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface ProductToPriceRangeV2Resolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface ProductToPrivateMetafieldArgs {
     namespace: string;
     key: string;
@@ -30870,7 +33469,23 @@ export interface AppUsagePricing {
     (parent: TParent, args: ProductToResourcePublicationsArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface ProductToResourcePublicationsV2Args {
+    onlyPublished?: boolean;
+    first?: number;
+    after?: string;
+    last?: number;
+    before?: string;
+    reverse?: boolean;
+  }
+  export interface ProductToResourcePublicationsV2Resolver<TParent = any, TResult = any> {
+    (parent: TParent, args: ProductToResourcePublicationsV2Args, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface ProductToSeoResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ProductToStatusResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -31087,6 +33702,19 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface ProductPriceRangeV2TypeResolver<TParent = any> {
+    maxVariantPrice?: ProductPriceRangeV2ToMaxVariantPriceResolver<TParent>;
+    minVariantPrice?: ProductPriceRangeV2ToMinVariantPriceResolver<TParent>;
+  }
+  
+  export interface ProductPriceRangeV2ToMaxVariantPriceResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ProductPriceRangeV2ToMinVariantPriceResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface ProductPublicationConnectionTypeResolver<TParent = any> {
     edges?: ProductPublicationConnectionToEdgesResolver<TParent>;
     pageInfo?: ProductPublicationConnectionToPageInfoResolver<TParent>;
@@ -31188,12 +33816,12 @@ export interface AppUsagePricing {
     harmonizedSystemCode?: ProductVariantToHarmonizedSystemCodeResolver<TParent>;
     id?: ProductVariantToIdResolver<TParent>;
     image?: ProductVariantToImageResolver<TParent>;
-    images?: ProductVariantToImagesResolver<TParent>;
     inventoryItem?: ProductVariantToInventoryItemResolver<TParent>;
     inventoryManagement?: ProductVariantToInventoryManagementResolver<TParent>;
     inventoryPolicy?: ProductVariantToInventoryPolicyResolver<TParent>;
     inventoryQuantity?: ProductVariantToInventoryQuantityResolver<TParent>;
     legacyResourceId?: ProductVariantToLegacyResourceIdResolver<TParent>;
+    media?: ProductVariantToMediaResolver<TParent>;
     metafield?: ProductVariantToMetafieldResolver<TParent>;
     metafields?: ProductVariantToMetafieldsResolver<TParent>;
     position?: ProductVariantToPositionResolver<TParent>;
@@ -31269,17 +33897,6 @@ export interface AppUsagePricing {
     (parent: TParent, args: ProductVariantToImageArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
-  export interface ProductVariantToImagesArgs {
-    first?: number;
-    maxWidth?: number;
-    maxHeight?: number;
-    crop?: CropRegion;
-    scale?: number;
-  }
-  export interface ProductVariantToImagesResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: ProductVariantToImagesArgs, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
   export interface ProductVariantToInventoryItemResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
@@ -31298,6 +33915,17 @@ export interface AppUsagePricing {
   
   export interface ProductVariantToLegacyResourceIdResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ProductVariantToMediaArgs {
+    first?: number;
+    after?: string;
+    last?: number;
+    before?: string;
+    reverse?: boolean;
+  }
+  export interface ProductVariantToMediaResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: ProductVariantToMediaArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface ProductVariantToMetafieldArgs {
@@ -32372,7 +35000,7 @@ export interface AppUsagePricing {
   }
   
   export interface DeliveryConditionCriteriaTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'Weight' | 'MoneyV2';
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'MoneyV2' | 'Weight';
   }
   export interface WeightTypeResolver<TParent = any> {
     unit?: WeightToUnitResolver<TParent>;
@@ -32388,21 +35016,8 @@ export interface AppUsagePricing {
   }
   
   export interface DeliveryRateProviderTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DeliveryRateDefinition' | 'DeliveryParticipant';
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DeliveryParticipant' | 'DeliveryRateDefinition';
   }
-  export interface DeliveryRateDefinitionTypeResolver<TParent = any> {
-    id?: DeliveryRateDefinitionToIdResolver<TParent>;
-    price?: DeliveryRateDefinitionToPriceResolver<TParent>;
-  }
-  
-  export interface DeliveryRateDefinitionToIdResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DeliveryRateDefinitionToPriceResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
   export interface DeliveryParticipantTypeResolver<TParent = any> {
     adaptToNewServicesFlag?: DeliveryParticipantToAdaptToNewServicesFlagResolver<TParent>;
     carrierService?: DeliveryParticipantToCarrierServiceResolver<TParent>;
@@ -32505,6 +35120,19 @@ export interface AppUsagePricing {
   }
   
   export interface DeliveryParticipantServiceToNameResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DeliveryRateDefinitionTypeResolver<TParent = any> {
+    id?: DeliveryRateDefinitionToIdResolver<TParent>;
+    price?: DeliveryRateDefinitionToPriceResolver<TParent>;
+  }
+  
+  export interface DeliveryRateDefinitionToIdResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DeliveryRateDefinitionToPriceResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -32806,9 +35434,201 @@ export interface AppUsagePricing {
   }
   
   export interface DiscountAutomaticTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DiscountAutomaticBxgy' | 'DiscountAutomaticBasic';
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DiscountAutomaticBasic' | 'DiscountAutomaticBxgy';
   }
+  export interface DiscountAutomaticBasicTypeResolver<TParent = any> {
+    asyncUsageCount?: DiscountAutomaticBasicToAsyncUsageCountResolver<TParent>;
+    createdAt?: DiscountAutomaticBasicToCreatedAtResolver<TParent>;
+    customerGets?: DiscountAutomaticBasicToCustomerGetsResolver<TParent>;
+    endsAt?: DiscountAutomaticBasicToEndsAtResolver<TParent>;
+    minimumRequirement?: DiscountAutomaticBasicToMinimumRequirementResolver<TParent>;
+    shortSummary?: DiscountAutomaticBasicToShortSummaryResolver<TParent>;
+    startsAt?: DiscountAutomaticBasicToStartsAtResolver<TParent>;
+    status?: DiscountAutomaticBasicToStatusResolver<TParent>;
+    summary?: DiscountAutomaticBasicToSummaryResolver<TParent>;
+    title?: DiscountAutomaticBasicToTitleResolver<TParent>;
+    usageCount?: DiscountAutomaticBasicToUsageCountResolver<TParent>;
+  }
+  
+  export interface DiscountAutomaticBasicToAsyncUsageCountResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountAutomaticBasicToCreatedAtResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountAutomaticBasicToCustomerGetsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountAutomaticBasicToEndsAtResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountAutomaticBasicToMinimumRequirementResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountAutomaticBasicToShortSummaryResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountAutomaticBasicToStartsAtResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountAutomaticBasicToStatusResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountAutomaticBasicToSummaryResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountAutomaticBasicToTitleResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountAutomaticBasicToUsageCountResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCustomerGetsTypeResolver<TParent = any> {
+    items?: DiscountCustomerGetsToItemsResolver<TParent>;
+    value?: DiscountCustomerGetsToValueResolver<TParent>;
+  }
+  
+  export interface DiscountCustomerGetsToItemsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCustomerGetsToValueResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountItemsTypeResolver<TParent = any> {
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'AllDiscountItems' | 'DiscountCollections' | 'DiscountProducts';
+  }
+  export interface AllDiscountItemsTypeResolver<TParent = any> {
+    allItems?: AllDiscountItemsToAllItemsResolver<TParent>;
+  }
+  
+  export interface AllDiscountItemsToAllItemsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCollectionsTypeResolver<TParent = any> {
+    collections?: DiscountCollectionsToCollectionsResolver<TParent>;
+  }
+  
+  export interface DiscountCollectionsToCollectionsArgs {
+    first?: number;
+    after?: string;
+    last?: number;
+    before?: string;
+    reverse?: boolean;
+  }
+  export interface DiscountCollectionsToCollectionsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: DiscountCollectionsToCollectionsArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountProductsTypeResolver<TParent = any> {
+    productVariants?: DiscountProductsToProductVariantsResolver<TParent>;
+    products?: DiscountProductsToProductsResolver<TParent>;
+  }
+  
+  export interface DiscountProductsToProductVariantsArgs {
+    first?: number;
+    after?: string;
+    last?: number;
+    before?: string;
+    reverse?: boolean;
+  }
+  export interface DiscountProductsToProductVariantsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: DiscountProductsToProductVariantsArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountProductsToProductsArgs {
+    first?: number;
+    after?: string;
+    last?: number;
+    before?: string;
+    reverse?: boolean;
+  }
+  export interface DiscountProductsToProductsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: DiscountProductsToProductsArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCustomerGetsValueTypeResolver<TParent = any> {
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DiscountAmount' | 'DiscountOnQuantity' | 'DiscountPercentage';
+  }
+  export interface DiscountAmountTypeResolver<TParent = any> {
+    amount?: DiscountAmountToAmountResolver<TParent>;
+    appliesOnEachItem?: DiscountAmountToAppliesOnEachItemResolver<TParent>;
+  }
+  
+  export interface DiscountAmountToAmountResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountAmountToAppliesOnEachItemResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountOnQuantityTypeResolver<TParent = any> {
+    effect?: DiscountOnQuantityToEffectResolver<TParent>;
+    quantity?: DiscountOnQuantityToQuantityResolver<TParent>;
+  }
+  
+  export interface DiscountOnQuantityToEffectResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountOnQuantityToQuantityResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountEffectTypeResolver<TParent = any> {
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DiscountPercentage';
+  }
+  export interface DiscountPercentageTypeResolver<TParent = any> {
+    percentage?: DiscountPercentageToPercentageResolver<TParent>;
+  }
+  
+  export interface DiscountPercentageToPercentageResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountQuantityTypeResolver<TParent = any> {
+    quantity?: DiscountQuantityToQuantityResolver<TParent>;
+  }
+  
+  export interface DiscountQuantityToQuantityResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountMinimumRequirementTypeResolver<TParent = any> {
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DiscountMinimumQuantity' | 'DiscountMinimumSubtotal';
+  }
+  export interface DiscountMinimumQuantityTypeResolver<TParent = any> {
+    greaterThanOrEqualToQuantity?: DiscountMinimumQuantityToGreaterThanOrEqualToQuantityResolver<TParent>;
+  }
+  
+  export interface DiscountMinimumQuantityToGreaterThanOrEqualToQuantityResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountMinimumSubtotalTypeResolver<TParent = any> {
+    greaterThanOrEqualToSubtotal?: DiscountMinimumSubtotalToGreaterThanOrEqualToSubtotalResolver<TParent>;
+  }
+  
+  export interface DiscountMinimumSubtotalToGreaterThanOrEqualToSubtotalResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface DiscountAutomaticBxgyTypeResolver<TParent = any> {
+    asyncUsageCount?: DiscountAutomaticBxgyToAsyncUsageCountResolver<TParent>;
     createdAt?: DiscountAutomaticBxgyToCreatedAtResolver<TParent>;
     customerBuys?: DiscountAutomaticBxgyToCustomerBuysResolver<TParent>;
     customerGets?: DiscountAutomaticBxgyToCustomerGetsResolver<TParent>;
@@ -32821,6 +35641,10 @@ export interface AppUsagePricing {
     title?: DiscountAutomaticBxgyToTitleResolver<TParent>;
     usageCount?: DiscountAutomaticBxgyToUsageCountResolver<TParent>;
     usesPerOrderLimit?: DiscountAutomaticBxgyToUsesPerOrderLimitResolver<TParent>;
+  }
+  
+  export interface DiscountAutomaticBxgyToAsyncUsageCountResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface DiscountAutomaticBxgyToCreatedAtResolver<TParent = any, TResult = any> {
@@ -32925,200 +35749,14 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
-  export interface DiscountItemsTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'AllDiscountItems' | 'DiscountProducts' | 'DiscountCollections';
-  }
-  export interface AllDiscountItemsTypeResolver<TParent = any> {
-    allItems?: AllDiscountItemsToAllItemsResolver<TParent>;
-  }
-  
-  export interface AllDiscountItemsToAllItemsResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountProductsTypeResolver<TParent = any> {
-    productVariants?: DiscountProductsToProductVariantsResolver<TParent>;
-    products?: DiscountProductsToProductsResolver<TParent>;
-  }
-  
-  export interface DiscountProductsToProductVariantsArgs {
-    first?: number;
-    after?: string;
-    last?: number;
-    before?: string;
-    reverse?: boolean;
-  }
-  export interface DiscountProductsToProductVariantsResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: DiscountProductsToProductVariantsArgs, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountProductsToProductsArgs {
-    first?: number;
-    after?: string;
-    last?: number;
-    before?: string;
-    reverse?: boolean;
-  }
-  export interface DiscountProductsToProductsResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: DiscountProductsToProductsArgs, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountCollectionsTypeResolver<TParent = any> {
-    collections?: DiscountCollectionsToCollectionsResolver<TParent>;
-  }
-  
-  export interface DiscountCollectionsToCollectionsArgs {
-    first?: number;
-    after?: string;
-    last?: number;
-    before?: string;
-    reverse?: boolean;
-  }
-  export interface DiscountCollectionsToCollectionsResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: DiscountCollectionsToCollectionsArgs, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
   export interface DiscountCustomerBuysValueTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DiscountQuantity' | 'DiscountPurchaseAmount';
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DiscountPurchaseAmount' | 'DiscountQuantity';
   }
-  export interface DiscountQuantityTypeResolver<TParent = any> {
-    quantity?: DiscountQuantityToQuantityResolver<TParent>;
-  }
-  
-  export interface DiscountQuantityToQuantityResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
   export interface DiscountPurchaseAmountTypeResolver<TParent = any> {
     amount?: DiscountPurchaseAmountToAmountResolver<TParent>;
   }
   
   export interface DiscountPurchaseAmountToAmountResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountCustomerGetsTypeResolver<TParent = any> {
-    items?: DiscountCustomerGetsToItemsResolver<TParent>;
-    value?: DiscountCustomerGetsToValueResolver<TParent>;
-  }
-  
-  export interface DiscountCustomerGetsToItemsResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountCustomerGetsToValueResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountCustomerGetsValueTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DiscountOnQuantity' | 'DiscountAmount' | 'DiscountPercentage';
-  }
-  export interface DiscountOnQuantityTypeResolver<TParent = any> {
-    effect?: DiscountOnQuantityToEffectResolver<TParent>;
-    quantity?: DiscountOnQuantityToQuantityResolver<TParent>;
-  }
-  
-  export interface DiscountOnQuantityToEffectResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountOnQuantityToQuantityResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountEffectTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DiscountPercentage';
-  }
-  export interface DiscountPercentageTypeResolver<TParent = any> {
-    percentage?: DiscountPercentageToPercentageResolver<TParent>;
-  }
-  
-  export interface DiscountPercentageToPercentageResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountAmountTypeResolver<TParent = any> {
-    amount?: DiscountAmountToAmountResolver<TParent>;
-    appliesOnEachItem?: DiscountAmountToAppliesOnEachItemResolver<TParent>;
-  }
-  
-  export interface DiscountAmountToAmountResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountAmountToAppliesOnEachItemResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountAutomaticBasicTypeResolver<TParent = any> {
-    createdAt?: DiscountAutomaticBasicToCreatedAtResolver<TParent>;
-    customerGets?: DiscountAutomaticBasicToCustomerGetsResolver<TParent>;
-    endsAt?: DiscountAutomaticBasicToEndsAtResolver<TParent>;
-    minimumRequirement?: DiscountAutomaticBasicToMinimumRequirementResolver<TParent>;
-    shortSummary?: DiscountAutomaticBasicToShortSummaryResolver<TParent>;
-    startsAt?: DiscountAutomaticBasicToStartsAtResolver<TParent>;
-    status?: DiscountAutomaticBasicToStatusResolver<TParent>;
-    summary?: DiscountAutomaticBasicToSummaryResolver<TParent>;
-    title?: DiscountAutomaticBasicToTitleResolver<TParent>;
-    usageCount?: DiscountAutomaticBasicToUsageCountResolver<TParent>;
-  }
-  
-  export interface DiscountAutomaticBasicToCreatedAtResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountAutomaticBasicToCustomerGetsResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountAutomaticBasicToEndsAtResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountAutomaticBasicToMinimumRequirementResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountAutomaticBasicToShortSummaryResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountAutomaticBasicToStartsAtResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountAutomaticBasicToStatusResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountAutomaticBasicToSummaryResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountAutomaticBasicToTitleResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountAutomaticBasicToUsageCountResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountMinimumRequirementTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DiscountMinimumQuantity' | 'DiscountMinimumSubtotal';
-  }
-  export interface DiscountMinimumQuantityTypeResolver<TParent = any> {
-    greaterThanOrEqualToQuantity?: DiscountMinimumQuantityToGreaterThanOrEqualToQuantityResolver<TParent>;
-  }
-  
-  export interface DiscountMinimumQuantityToGreaterThanOrEqualToQuantityResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface DiscountMinimumSubtotalTypeResolver<TParent = any> {
-    greaterThanOrEqualToSubtotal?: DiscountMinimumSubtotalToGreaterThanOrEqualToSubtotalResolver<TParent>;
-  }
-  
-  export interface DiscountMinimumSubtotalToGreaterThanOrEqualToSubtotalResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -33343,12 +35981,15 @@ export interface AppUsagePricing {
     customerGets?: DiscountCodeBasicToCustomerGetsResolver<TParent>;
     customerSelection?: DiscountCodeBasicToCustomerSelectionResolver<TParent>;
     endsAt?: DiscountCodeBasicToEndsAtResolver<TParent>;
+    hasTimelineComment?: DiscountCodeBasicToHasTimelineCommentResolver<TParent>;
     minimumRequirement?: DiscountCodeBasicToMinimumRequirementResolver<TParent>;
+    shareableUrls?: DiscountCodeBasicToShareableUrlsResolver<TParent>;
     shortSummary?: DiscountCodeBasicToShortSummaryResolver<TParent>;
     startsAt?: DiscountCodeBasicToStartsAtResolver<TParent>;
     status?: DiscountCodeBasicToStatusResolver<TParent>;
     summary?: DiscountCodeBasicToSummaryResolver<TParent>;
     title?: DiscountCodeBasicToTitleResolver<TParent>;
+    totalSales?: DiscountCodeBasicToTotalSalesResolver<TParent>;
     usageLimit?: DiscountCodeBasicToUsageLimitResolver<TParent>;
   }
   
@@ -33370,6 +36011,9 @@ export interface AppUsagePricing {
     last?: number;
     before?: string;
     reverse?: boolean;
+    sortKey?: DiscountCodeSortKeys;
+    query?: string;
+    savedSearchId?: string;
   }
   export interface DiscountCodeBasicToCodesResolver<TParent = any, TResult = any> {
     (parent: TParent, args: DiscountCodeBasicToCodesArgs, context: any, info: GraphQLResolveInfo): TResult;
@@ -33391,7 +36035,15 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface DiscountCodeBasicToHasTimelineCommentResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface DiscountCodeBasicToMinimumRequirementResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCodeBasicToShareableUrlsResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -33412,6 +36064,10 @@ export interface AppUsagePricing {
   }
   
   export interface DiscountCodeBasicToTitleResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCodeBasicToTotalSalesResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -33446,21 +36102,44 @@ export interface AppUsagePricing {
   }
   
   export interface DiscountRedeemCodeTypeResolver<TParent = any> {
+    asyncUsageCount?: DiscountRedeemCodeToAsyncUsageCountResolver<TParent>;
     code?: DiscountRedeemCodeToCodeResolver<TParent>;
+    createdBy?: DiscountRedeemCodeToCreatedByResolver<TParent>;
+    id?: DiscountRedeemCodeToIdResolver<TParent>;
+  }
+  
+  export interface DiscountRedeemCodeToAsyncUsageCountResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface DiscountRedeemCodeToCodeResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface DiscountRedeemCodeToCreatedByResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountRedeemCodeToIdResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface DiscountCustomerSelectionTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DiscountCustomerAll' | 'DiscountCustomers' | 'DiscountCustomerSavedSearches';
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DiscountCustomerAll' | 'DiscountCustomerSavedSearches' | 'DiscountCustomers';
   }
   export interface DiscountCustomerAllTypeResolver<TParent = any> {
     allCustomers?: DiscountCustomerAllToAllCustomersResolver<TParent>;
   }
   
   export interface DiscountCustomerAllToAllCustomersResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCustomerSavedSearchesTypeResolver<TParent = any> {
+    savedSearches?: DiscountCustomerSavedSearchesToSavedSearchesResolver<TParent>;
+  }
+  
+  export interface DiscountCustomerSavedSearchesToSavedSearchesResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -33497,6 +36176,7 @@ export interface AppUsagePricing {
     marketingOptInLevel?: CustomerToMarketingOptInLevelResolver<TParent>;
     metafield?: CustomerToMetafieldResolver<TParent>;
     metafields?: CustomerToMetafieldsResolver<TParent>;
+    multipassIdentifier?: CustomerToMultipassIdentifierResolver<TParent>;
     note?: CustomerToNoteResolver<TParent>;
     orders?: CustomerToOrdersResolver<TParent>;
     ordersCount?: CustomerToOrdersCountResolver<TParent>;
@@ -33635,6 +36315,10 @@ export interface AppUsagePricing {
   }
   export interface CustomerToMetafieldsResolver<TParent = any, TResult = any> {
     (parent: TParent, args: CustomerToMetafieldsArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CustomerToMultipassIdentifierResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface CustomerToNoteResolver<TParent = any, TResult = any> {
@@ -33841,11 +36525,20 @@ export interface AppUsagePricing {
     confirmed?: OrderToConfirmedResolver<TParent>;
     createdAt?: OrderToCreatedAtResolver<TParent>;
     currencyCode?: OrderToCurrencyCodeResolver<TParent>;
+    currentCartDiscountAmountSet?: OrderToCurrentCartDiscountAmountSetResolver<TParent>;
+    currentSubtotalLineItemsQuantity?: OrderToCurrentSubtotalLineItemsQuantityResolver<TParent>;
+    currentSubtotalPriceSet?: OrderToCurrentSubtotalPriceSetResolver<TParent>;
+    currentTaxLines?: OrderToCurrentTaxLinesResolver<TParent>;
+    currentTotalDiscountsSet?: OrderToCurrentTotalDiscountsSetResolver<TParent>;
     currentTotalDutiesSet?: OrderToCurrentTotalDutiesSetResolver<TParent>;
+    currentTotalPriceSet?: OrderToCurrentTotalPriceSetResolver<TParent>;
+    currentTotalTaxSet?: OrderToCurrentTotalTaxSetResolver<TParent>;
+    currentTotalWeight?: OrderToCurrentTotalWeightResolver<TParent>;
     customAttributes?: OrderToCustomAttributesResolver<TParent>;
     customer?: OrderToCustomerResolver<TParent>;
     customerAcceptsMarketing?: OrderToCustomerAcceptsMarketingResolver<TParent>;
     customerJourney?: OrderToCustomerJourneyResolver<TParent>;
+    customerJourneySummary?: OrderToCustomerJourneySummaryResolver<TParent>;
     customerLocale?: OrderToCustomerLocaleResolver<TParent>;
     discountApplications?: OrderToDiscountApplicationsResolver<TParent>;
     discountCode?: OrderToDiscountCodeResolver<TParent>;
@@ -33868,8 +36561,10 @@ export interface AppUsagePricing {
     legacyResourceId?: OrderToLegacyResourceIdResolver<TParent>;
     lineItems?: OrderToLineItemsResolver<TParent>;
     lineItemsMutable?: OrderToLineItemsMutableResolver<TParent>;
+    localizationExtensions?: OrderToLocalizationExtensionsResolver<TParent>;
     location?: OrderToLocationResolver<TParent>;
     merchantEditable?: OrderToMerchantEditableResolver<TParent>;
+    merchantEditableErrors?: OrderToMerchantEditableErrorsResolver<TParent>;
     metafield?: OrderToMetafieldResolver<TParent>;
     metafields?: OrderToMetafieldsResolver<TParent>;
     name?: OrderToNameResolver<TParent>;
@@ -33900,6 +36595,7 @@ export interface AppUsagePricing {
     risks?: OrderToRisksResolver<TParent>;
     shippingAddress?: OrderToShippingAddressResolver<TParent>;
     shippingLine?: OrderToShippingLineResolver<TParent>;
+    shippingLines?: OrderToShippingLinesResolver<TParent>;
     subtotalLineItemsQuantity?: OrderToSubtotalLineItemsQuantityResolver<TParent>;
     subtotalPrice?: OrderToSubtotalPriceResolver<TParent>;
     subtotalPriceSet?: OrderToSubtotalPriceSetResolver<TParent>;
@@ -33924,6 +36620,7 @@ export interface AppUsagePricing {
     totalShippingPriceSet?: OrderToTotalShippingPriceSetResolver<TParent>;
     totalTax?: OrderToTotalTaxResolver<TParent>;
     totalTaxSet?: OrderToTotalTaxSetResolver<TParent>;
+    totalTipReceived?: OrderToTotalTipReceivedResolver<TParent>;
     totalWeight?: OrderToTotalWeightResolver<TParent>;
     transactions?: OrderToTransactionsResolver<TParent>;
     unpaid?: OrderToUnpaidResolver<TParent>;
@@ -33998,7 +36695,39 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface OrderToCurrentCartDiscountAmountSetResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderToCurrentSubtotalLineItemsQuantityResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderToCurrentSubtotalPriceSetResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderToCurrentTaxLinesResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderToCurrentTotalDiscountsSetResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface OrderToCurrentTotalDutiesSetResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderToCurrentTotalPriceSetResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderToCurrentTotalTaxSetResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderToCurrentTotalWeightResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -34015,6 +36744,10 @@ export interface AppUsagePricing {
   }
   
   export interface OrderToCustomerJourneyResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderToCustomerJourneySummaryResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -34148,11 +36881,28 @@ export interface AppUsagePricing {
     (parent: TParent, args: OrderToLineItemsMutableArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface OrderToLocalizationExtensionsArgs {
+    countryCodes?: Array<CountryCode>;
+    purposes?: Array<LocalizationExtensionPurpose>;
+    first?: number;
+    after?: string;
+    last?: number;
+    before?: string;
+    reverse?: boolean;
+  }
+  export interface OrderToLocalizationExtensionsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: OrderToLocalizationExtensionsArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface OrderToLocationResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface OrderToMerchantEditableResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderToMerchantEditableErrorsResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -34313,6 +37063,17 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface OrderToShippingLinesArgs {
+    first?: number;
+    after?: string;
+    last?: number;
+    before?: string;
+    reverse?: boolean;
+  }
+  export interface OrderToShippingLinesResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: OrderToShippingLinesArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface OrderToSubtotalLineItemsQuantityResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
@@ -34416,6 +37177,10 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface OrderToTotalTipReceivedResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface OrderToTotalWeightResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
@@ -34434,6 +37199,58 @@ export interface AppUsagePricing {
   }
   
   export interface OrderToUpdatedAtResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface HasLocalizationExtensionsTypeResolver<TParent = any> {
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'Order';
+  }
+  export interface LocalizationExtensionConnectionTypeResolver<TParent = any> {
+    edges?: LocalizationExtensionConnectionToEdgesResolver<TParent>;
+    pageInfo?: LocalizationExtensionConnectionToPageInfoResolver<TParent>;
+  }
+  
+  export interface LocalizationExtensionConnectionToEdgesResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface LocalizationExtensionConnectionToPageInfoResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface LocalizationExtensionEdgeTypeResolver<TParent = any> {
+    cursor?: LocalizationExtensionEdgeToCursorResolver<TParent>;
+    node?: LocalizationExtensionEdgeToNodeResolver<TParent>;
+  }
+  
+  export interface LocalizationExtensionEdgeToCursorResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface LocalizationExtensionEdgeToNodeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface LocalizationExtensionTypeResolver<TParent = any> {
+    countryCode?: LocalizationExtensionToCountryCodeResolver<TParent>;
+    purpose?: LocalizationExtensionToPurposeResolver<TParent>;
+    title?: LocalizationExtensionToTitleResolver<TParent>;
+    value?: LocalizationExtensionToValueResolver<TParent>;
+  }
+  
+  export interface LocalizationExtensionToCountryCodeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface LocalizationExtensionToPurposeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface LocalizationExtensionToTitleResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface LocalizationExtensionToValueResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -34503,6 +37320,34 @@ export interface AppUsagePricing {
   }
   
   export interface MoneyBagToShopMoneyResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface TaxLineTypeResolver<TParent = any> {
+    price?: TaxLineToPriceResolver<TParent>;
+    priceSet?: TaxLineToPriceSetResolver<TParent>;
+    rate?: TaxLineToRateResolver<TParent>;
+    ratePercentage?: TaxLineToRatePercentageResolver<TParent>;
+    title?: TaxLineToTitleResolver<TParent>;
+  }
+  
+  export interface TaxLineToPriceResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface TaxLineToPriceSetResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface TaxLineToRateResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface TaxLineToRatePercentageResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface TaxLineToTitleResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -34729,6 +37574,77 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface CustomerJourneySummaryTypeResolver<TParent = any> {
+    customerOrderIndex?: CustomerJourneySummaryToCustomerOrderIndexResolver<TParent>;
+    daysToConversion?: CustomerJourneySummaryToDaysToConversionResolver<TParent>;
+    firstVisit?: CustomerJourneySummaryToFirstVisitResolver<TParent>;
+    lastVisit?: CustomerJourneySummaryToLastVisitResolver<TParent>;
+    moments?: CustomerJourneySummaryToMomentsResolver<TParent>;
+    momentsCount?: CustomerJourneySummaryToMomentsCountResolver<TParent>;
+    ready?: CustomerJourneySummaryToReadyResolver<TParent>;
+  }
+  
+  export interface CustomerJourneySummaryToCustomerOrderIndexResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CustomerJourneySummaryToDaysToConversionResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CustomerJourneySummaryToFirstVisitResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CustomerJourneySummaryToLastVisitResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CustomerJourneySummaryToMomentsArgs {
+    first?: number;
+    after?: string;
+    last?: number;
+    before?: string;
+    reverse?: boolean;
+  }
+  export interface CustomerJourneySummaryToMomentsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: CustomerJourneySummaryToMomentsArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CustomerJourneySummaryToMomentsCountResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CustomerJourneySummaryToReadyResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CustomerMomentConnectionTypeResolver<TParent = any> {
+    edges?: CustomerMomentConnectionToEdgesResolver<TParent>;
+    pageInfo?: CustomerMomentConnectionToPageInfoResolver<TParent>;
+  }
+  
+  export interface CustomerMomentConnectionToEdgesResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CustomerMomentConnectionToPageInfoResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CustomerMomentEdgeTypeResolver<TParent = any> {
+    cursor?: CustomerMomentEdgeToCursorResolver<TParent>;
+    node?: CustomerMomentEdgeToNodeResolver<TParent>;
+  }
+  
+  export interface CustomerMomentEdgeToCursorResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CustomerMomentEdgeToNodeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface DiscountApplicationConnectionTypeResolver<TParent = any> {
     edges?: DiscountApplicationConnectionToEdgesResolver<TParent>;
     pageInfo?: DiscountApplicationConnectionToPageInfoResolver<TParent>;
@@ -34759,7 +37675,7 @@ export interface AppUsagePricing {
     (parent: TParent, context: any, info: GraphQLResolveInfo): 'AutomaticDiscountApplication' | 'DiscountCodeApplication' | 'ManualDiscountApplication' | 'ScriptDiscountApplication';
   }
   export interface PricingValueTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'PricingPercentageValue' | 'MoneyV2';
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'MoneyV2' | 'PricingPercentageValue';
   }
   export interface PricingPercentageValueTypeResolver<TParent = any> {
     percentage?: PricingPercentageValueToPercentageResolver<TParent>;
@@ -35063,34 +37979,6 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
-  export interface TaxLineTypeResolver<TParent = any> {
-    price?: TaxLineToPriceResolver<TParent>;
-    priceSet?: TaxLineToPriceSetResolver<TParent>;
-    rate?: TaxLineToRateResolver<TParent>;
-    ratePercentage?: TaxLineToRatePercentageResolver<TParent>;
-    title?: TaxLineToTitleResolver<TParent>;
-  }
-  
-  export interface TaxLineToPriceResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface TaxLineToPriceSetResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface TaxLineToRateResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface TaxLineToRatePercentageResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface TaxLineToTitleResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
   export interface FulfillmentOrderConnectionTypeResolver<TParent = any> {
     edges?: FulfillmentOrderConnectionToEdgesResolver<TParent>;
     pageInfo?: FulfillmentOrderConnectionToPageInfoResolver<TParent>;
@@ -35119,6 +38007,7 @@ export interface AppUsagePricing {
   
   export interface FulfillmentOrderTypeResolver<TParent = any> {
     assignedLocation?: FulfillmentOrderToAssignedLocationResolver<TParent>;
+    deliveryMethod?: FulfillmentOrderToDeliveryMethodResolver<TParent>;
     destination?: FulfillmentOrderToDestinationResolver<TParent>;
     fulfillments?: FulfillmentOrderToFulfillmentsResolver<TParent>;
     id?: FulfillmentOrderToIdResolver<TParent>;
@@ -35132,6 +38021,10 @@ export interface AppUsagePricing {
   }
   
   export interface FulfillmentOrderToAssignedLocationResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface FulfillmentOrderToDeliveryMethodResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -35249,6 +38142,19 @@ export interface AppUsagePricing {
   }
   
   export interface FulfillmentOrderAssignedLocationToZipResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DeliveryMethodTypeResolver<TParent = any> {
+    id?: DeliveryMethodToIdResolver<TParent>;
+    methodType?: DeliveryMethodToMethodTypeResolver<TParent>;
+  }
+  
+  export interface DeliveryMethodToIdResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DeliveryMethodToMethodTypeResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -36023,8 +38929,8 @@ export interface AppUsagePricing {
     id?: RefundToIdResolver<TParent>;
     legacyResourceId?: RefundToLegacyResourceIdResolver<TParent>;
     note?: RefundToNoteResolver<TParent>;
+    order?: RefundToOrderResolver<TParent>;
     refundLineItems?: RefundToRefundLineItemsResolver<TParent>;
-    restocked?: RefundToRestockedResolver<TParent>;
     totalRefunded?: RefundToTotalRefundedResolver<TParent>;
     totalRefundedSet?: RefundToTotalRefundedSetResolver<TParent>;
     transactions?: RefundToTransactionsResolver<TParent>;
@@ -36051,6 +38957,10 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface RefundToOrderResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface RefundToRefundLineItemsArgs {
     first?: number;
     after?: string;
@@ -36060,10 +38970,6 @@ export interface AppUsagePricing {
   }
   export interface RefundToRefundLineItemsResolver<TParent = any, TResult = any> {
     (parent: TParent, args: RefundToRefundLineItemsArgs, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface RefundToRestockedResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface RefundToTotalRefundedResolver<TParent = any, TResult = any> {
@@ -36134,7 +39040,6 @@ export interface AppUsagePricing {
     price?: RefundLineItemToPriceResolver<TParent>;
     priceSet?: RefundLineItemToPriceSetResolver<TParent>;
     quantity?: RefundLineItemToQuantityResolver<TParent>;
-    refundType?: RefundLineItemToRefundTypeResolver<TParent>;
     restockType?: RefundLineItemToRestockTypeResolver<TParent>;
     restocked?: RefundLineItemToRestockedResolver<TParent>;
     subtotal?: RefundLineItemToSubtotalResolver<TParent>;
@@ -36160,10 +39065,6 @@ export interface AppUsagePricing {
   }
   
   export interface RefundLineItemToQuantityResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface RefundLineItemToRefundTypeResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -36457,6 +39358,32 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface ShippingLineConnectionTypeResolver<TParent = any> {
+    edges?: ShippingLineConnectionToEdgesResolver<TParent>;
+    pageInfo?: ShippingLineConnectionToPageInfoResolver<TParent>;
+  }
+  
+  export interface ShippingLineConnectionToEdgesResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ShippingLineConnectionToPageInfoResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ShippingLineEdgeTypeResolver<TParent = any> {
+    cursor?: ShippingLineEdgeToCursorResolver<TParent>;
+    node?: ShippingLineEdgeToNodeResolver<TParent>;
+  }
+  
+  export interface ShippingLineEdgeToCursorResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ShippingLineEdgeToNodeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface SuggestedRefundTypeResolver<TParent = any> {
     amount?: SuggestedRefundToAmountResolver<TParent>;
     amountSet?: SuggestedRefundToAmountSetResolver<TParent>;
@@ -36642,11 +39569,26 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
-  export interface DiscountCustomerSavedSearchesTypeResolver<TParent = any> {
-    savedSearches?: DiscountCustomerSavedSearchesToSavedSearchesResolver<TParent>;
+  export interface DiscountShareableUrlTypeResolver<TParent = any> {
+    targetItemImage?: DiscountShareableUrlToTargetItemImageResolver<TParent>;
+    targetType?: DiscountShareableUrlToTargetTypeResolver<TParent>;
+    title?: DiscountShareableUrlToTitleResolver<TParent>;
+    url?: DiscountShareableUrlToUrlResolver<TParent>;
   }
   
-  export interface DiscountCustomerSavedSearchesToSavedSearchesResolver<TParent = any, TResult = any> {
+  export interface DiscountShareableUrlToTargetItemImageResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountShareableUrlToTargetTypeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountShareableUrlToTitleResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountShareableUrlToUrlResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -36660,10 +39602,13 @@ export interface AppUsagePricing {
     customerGets?: DiscountCodeBxgyToCustomerGetsResolver<TParent>;
     customerSelection?: DiscountCodeBxgyToCustomerSelectionResolver<TParent>;
     endsAt?: DiscountCodeBxgyToEndsAtResolver<TParent>;
+    hasTimelineComment?: DiscountCodeBxgyToHasTimelineCommentResolver<TParent>;
+    shareableUrls?: DiscountCodeBxgyToShareableUrlsResolver<TParent>;
     startsAt?: DiscountCodeBxgyToStartsAtResolver<TParent>;
     status?: DiscountCodeBxgyToStatusResolver<TParent>;
     summary?: DiscountCodeBxgyToSummaryResolver<TParent>;
     title?: DiscountCodeBxgyToTitleResolver<TParent>;
+    totalSales?: DiscountCodeBxgyToTotalSalesResolver<TParent>;
     usageLimit?: DiscountCodeBxgyToUsageLimitResolver<TParent>;
     usesPerOrderLimit?: DiscountCodeBxgyToUsesPerOrderLimitResolver<TParent>;
   }
@@ -36686,6 +39631,9 @@ export interface AppUsagePricing {
     last?: number;
     before?: string;
     reverse?: boolean;
+    sortKey?: DiscountCodeSortKeys;
+    query?: string;
+    savedSearchId?: string;
   }
   export interface DiscountCodeBxgyToCodesResolver<TParent = any, TResult = any> {
     (parent: TParent, args: DiscountCodeBxgyToCodesArgs, context: any, info: GraphQLResolveInfo): TResult;
@@ -36711,6 +39659,14 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface DiscountCodeBxgyToHasTimelineCommentResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCodeBxgyToShareableUrlsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface DiscountCodeBxgyToStartsAtResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
@@ -36724,6 +39680,10 @@ export interface AppUsagePricing {
   }
   
   export interface DiscountCodeBxgyToTitleResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCodeBxgyToTotalSalesResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -36744,12 +39704,16 @@ export interface AppUsagePricing {
     customerSelection?: DiscountCodeFreeShippingToCustomerSelectionResolver<TParent>;
     destinationSelection?: DiscountCodeFreeShippingToDestinationSelectionResolver<TParent>;
     endsAt?: DiscountCodeFreeShippingToEndsAtResolver<TParent>;
+    hasTimelineComment?: DiscountCodeFreeShippingToHasTimelineCommentResolver<TParent>;
+    maximumShippingPrice?: DiscountCodeFreeShippingToMaximumShippingPriceResolver<TParent>;
     minimumRequirement?: DiscountCodeFreeShippingToMinimumRequirementResolver<TParent>;
+    shareableUrls?: DiscountCodeFreeShippingToShareableUrlsResolver<TParent>;
     shortSummary?: DiscountCodeFreeShippingToShortSummaryResolver<TParent>;
     startsAt?: DiscountCodeFreeShippingToStartsAtResolver<TParent>;
     status?: DiscountCodeFreeShippingToStatusResolver<TParent>;
     summary?: DiscountCodeFreeShippingToSummaryResolver<TParent>;
     title?: DiscountCodeFreeShippingToTitleResolver<TParent>;
+    totalSales?: DiscountCodeFreeShippingToTotalSalesResolver<TParent>;
     usageLimit?: DiscountCodeFreeShippingToUsageLimitResolver<TParent>;
   }
   
@@ -36771,6 +39735,9 @@ export interface AppUsagePricing {
     last?: number;
     before?: string;
     reverse?: boolean;
+    sortKey?: DiscountCodeSortKeys;
+    query?: string;
+    savedSearchId?: string;
   }
   export interface DiscountCodeFreeShippingToCodesResolver<TParent = any, TResult = any> {
     (parent: TParent, args: DiscountCodeFreeShippingToCodesArgs, context: any, info: GraphQLResolveInfo): TResult;
@@ -36792,7 +39759,19 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface DiscountCodeFreeShippingToHasTimelineCommentResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCodeFreeShippingToMaximumShippingPriceResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface DiscountCodeFreeShippingToMinimumRequirementResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCodeFreeShippingToShareableUrlsResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -36816,21 +39795,17 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface DiscountCodeFreeShippingToTotalSalesResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface DiscountCodeFreeShippingToUsageLimitResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface DiscountShippingDestinationSelectionTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DiscountCountryAll' | 'DiscountCountries';
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'DiscountCountries' | 'DiscountCountryAll';
   }
-  export interface DiscountCountryAllTypeResolver<TParent = any> {
-    allCountries?: DiscountCountryAllToAllCountriesResolver<TParent>;
-  }
-  
-  export interface DiscountCountryAllToAllCountriesResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
   export interface DiscountCountriesTypeResolver<TParent = any> {
     countries?: DiscountCountriesToCountriesResolver<TParent>;
     includeRestOfWorld?: DiscountCountriesToIncludeRestOfWorldResolver<TParent>;
@@ -36841,6 +39816,14 @@ export interface AppUsagePricing {
   }
   
   export interface DiscountCountriesToIncludeRestOfWorldResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCountryAllTypeResolver<TParent = any> {
+    allCountries?: DiscountCountryAllToAllCountriesResolver<TParent>;
+  }
+  
+  export interface DiscountCountryAllToAllCountriesResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -36897,6 +39880,7 @@ export interface AppUsagePricing {
     objectCount?: BulkOperationToObjectCountResolver<TParent>;
     partialDataUrl?: BulkOperationToPartialDataUrlResolver<TParent>;
     query?: BulkOperationToQueryResolver<TParent>;
+    rootObjectCount?: BulkOperationToRootObjectCountResolver<TParent>;
     status?: BulkOperationToStatusResolver<TParent>;
     url?: BulkOperationToUrlResolver<TParent>;
   }
@@ -36930,6 +39914,10 @@ export interface AppUsagePricing {
   }
   
   export interface BulkOperationToQueryResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface BulkOperationToRootObjectCountResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -37066,6 +40054,7 @@ export interface AppUsagePricing {
   export interface DomainTypeResolver<TParent = any> {
     host?: DomainToHostResolver<TParent>;
     id?: DomainToIdResolver<TParent>;
+    localization?: DomainToLocalizationResolver<TParent>;
     sslEnabled?: DomainToSslEnabledResolver<TParent>;
     url?: DomainToUrlResolver<TParent>;
   }
@@ -37078,11 +40067,33 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface DomainToLocalizationResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface DomainToSslEnabledResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface DomainToUrlResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DomainLocalizationTypeResolver<TParent = any> {
+    alternateLocales?: DomainLocalizationToAlternateLocalesResolver<TParent>;
+    country?: DomainLocalizationToCountryResolver<TParent>;
+    defaultLocale?: DomainLocalizationToDefaultLocaleResolver<TParent>;
+  }
+  
+  export interface DomainLocalizationToAlternateLocalesResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DomainLocalizationToCountryResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DomainLocalizationToDefaultLocaleResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -37109,6 +40120,7 @@ export interface AppUsagePricing {
     order?: DraftOrderToOrderResolver<TParent>;
     privateMetafield?: DraftOrderToPrivateMetafieldResolver<TParent>;
     privateMetafields?: DraftOrderToPrivateMetafieldsResolver<TParent>;
+    ready?: DraftOrderToReadyResolver<TParent>;
     shippingAddress?: DraftOrderToShippingAddressResolver<TParent>;
     shippingLine?: DraftOrderToShippingLineResolver<TParent>;
     status?: DraftOrderToStatusResolver<TParent>;
@@ -37250,6 +40262,10 @@ export interface AppUsagePricing {
   }
   export interface DraftOrderToPrivateMetafieldsResolver<TParent = any, TResult = any> {
     (parent: TParent, args: DraftOrderToPrivateMetafieldsArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DraftOrderToReadyResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface DraftOrderToShippingAddressResolver<TParent = any, TResult = any> {
@@ -37600,11 +40616,14 @@ export interface AppUsagePricing {
     appErrors?: MarketingActivityToAppErrorsResolver<TParent>;
     budget?: MarketingActivityToBudgetResolver<TParent>;
     createdAt?: MarketingActivityToCreatedAtResolver<TParent>;
+    formData?: MarketingActivityToFormDataResolver<TParent>;
     id?: MarketingActivityToIdResolver<TParent>;
     marketingChannel?: MarketingActivityToMarketingChannelResolver<TParent>;
     marketingEvent?: MarketingActivityToMarketingEventResolver<TParent>;
     sourceAndMedium?: MarketingActivityToSourceAndMediumResolver<TParent>;
     status?: MarketingActivityToStatusResolver<TParent>;
+    statusBadgeType?: MarketingActivityToStatusBadgeTypeResolver<TParent>;
+    statusLabel?: MarketingActivityToStatusLabelResolver<TParent>;
     statusTransitionedAt?: MarketingActivityToStatusTransitionedAtResolver<TParent>;
     tactic?: MarketingActivityToTacticResolver<TParent>;
     targetStatus?: MarketingActivityToTargetStatusResolver<TParent>;
@@ -37637,6 +40656,10 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface MarketingActivityToFormDataResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface MarketingActivityToIdResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
@@ -37654,6 +40677,14 @@ export interface AppUsagePricing {
   }
   
   export interface MarketingActivityToStatusResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MarketingActivityToStatusBadgeTypeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MarketingActivityToStatusLabelResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -38281,21 +41312,21 @@ export interface AppUsagePricing {
   }
   
   export interface PriceRuleValueTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'PriceRulePercentValue' | 'PriceRuleFixedAmountValue';
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'PriceRuleFixedAmountValue' | 'PriceRulePercentValue';
   }
-  export interface PriceRulePercentValueTypeResolver<TParent = any> {
-    percentage?: PriceRulePercentValueToPercentageResolver<TParent>;
-  }
-  
-  export interface PriceRulePercentValueToPercentageResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
   export interface PriceRuleFixedAmountValueTypeResolver<TParent = any> {
     amount?: PriceRuleFixedAmountValueToAmountResolver<TParent>;
   }
   
   export interface PriceRuleFixedAmountValueToAmountResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface PriceRulePercentValueTypeResolver<TParent = any> {
+    percentage?: PriceRulePercentValueToPercentageResolver<TParent>;
+  }
+  
+  export interface PriceRulePercentValueToPercentageResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -38405,11 +41436,9 @@ export interface AppUsagePricing {
   export interface ShopTypeResolver<TParent = any> {
     alerts?: ShopToAlertsResolver<TParent>;
     analyticsToken?: ShopToAnalyticsTokenResolver<TParent>;
-    appInstallations?: ShopToAppInstallationsResolver<TParent>;
     assignedFulfillmentOrders?: ShopToAssignedFulfillmentOrdersResolver<TParent>;
     availableChannelApps?: ShopToAvailableChannelAppsResolver<TParent>;
     billingAddress?: ShopToBillingAddressResolver<TParent>;
-    channelAppInstallations?: ShopToChannelAppInstallationsResolver<TParent>;
     channelCount?: ShopToChannelCountResolver<TParent>;
     channels?: ShopToChannelsResolver<TParent>;
     checkoutApiSupported?: ShopToCheckoutApiSupportedResolver<TParent>;
@@ -38426,6 +41455,7 @@ export interface AppUsagePricing {
     customerTags?: ShopToCustomerTagsResolver<TParent>;
     customers?: ShopToCustomersResolver<TParent>;
     description?: ShopToDescriptionResolver<TParent>;
+    domains?: ShopToDomainsResolver<TParent>;
     draftOrderSavedSearches?: ShopToDraftOrderSavedSearchesResolver<TParent>;
     draftOrderTags?: ShopToDraftOrderTagsResolver<TParent>;
     draftOrders?: ShopToDraftOrdersResolver<TParent>;
@@ -38436,7 +41466,6 @@ export interface AppUsagePricing {
     fulfillmentServices?: ShopToFulfillmentServicesResolver<TParent>;
     ianaTimezone?: ShopToIanaTimezoneResolver<TParent>;
     id?: ShopToIdResolver<TParent>;
-    installedApps?: ShopToInstalledAppsResolver<TParent>;
     inventoryItems?: ShopToInventoryItemsResolver<TParent>;
     limitedPendingOrderCount?: ShopToLimitedPendingOrderCountResolver<TParent>;
     locations?: ShopToLocationsResolver<TParent>;
@@ -38474,6 +41503,7 @@ export interface AppUsagePricing {
     searchFilters?: ShopToSearchFiltersResolver<TParent>;
     setupRequired?: ShopToSetupRequiredResolver<TParent>;
     shipsToCountries?: ShopToShipsToCountriesResolver<TParent>;
+    shopPolicies?: ShopToShopPoliciesResolver<TParent>;
     shopifyPaymentsAccount?: ShopToShopifyPaymentsAccountResolver<TParent>;
     storefrontAccessTokens?: ShopToStorefrontAccessTokensResolver<TParent>;
     storefrontUrl?: ShopToStorefrontUrlResolver<TParent>;
@@ -38496,20 +41526,6 @@ export interface AppUsagePricing {
   
   export interface ShopToAnalyticsTokenResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface ShopToAppInstallationsArgs {
-    first?: number;
-    after?: string;
-    last?: number;
-    before?: string;
-    reverse?: boolean;
-    sortKey?: AppInstallationSortKeys;
-    category?: AppInstallationCategory;
-    privacy?: AppInstallationPrivacy;
-  }
-  export interface ShopToAppInstallationsResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: ShopToAppInstallationsArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface ShopToAssignedFulfillmentOrdersArgs {
@@ -38539,19 +41555,6 @@ export interface AppUsagePricing {
   
   export interface ShopToBillingAddressResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface ShopToChannelAppInstallationsArgs {
-    excludePrivateApps?: boolean;
-    first?: number;
-    after?: string;
-    last?: number;
-    before?: string;
-    reverse?: boolean;
-    sortKey?: AppInstallationSortKeys;
-  }
-  export interface ShopToChannelAppInstallationsResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: ShopToChannelAppInstallationsArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface ShopToChannelCountResolver<TParent = any, TResult = any> {
@@ -38673,6 +41676,10 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface ShopToDomainsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface ShopToDraftOrderSavedSearchesArgs {
     first?: number;
     after?: string;
@@ -38740,19 +41747,6 @@ export interface AppUsagePricing {
   
   export interface ShopToIdResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface ShopToInstalledAppsArgs {
-    visibleOnly?: boolean;
-    first?: number;
-    after?: string;
-    last?: number;
-    before?: string;
-    reverse?: boolean;
-    sortKey?: AppsSortKeys;
-  }
-  export interface ShopToInstalledAppsResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: ShopToInstalledAppsArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface ShopToInventoryItemsArgs {
@@ -39048,6 +42042,10 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface ShopToShopPoliciesResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface ShopToShopifyPaymentsAccountResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
@@ -39301,6 +42299,7 @@ export interface AppUsagePricing {
     dynamicRemarketing?: ShopFeaturesToDynamicRemarketingResolver<TParent>;
     giftCards?: ShopFeaturesToGiftCardsResolver<TParent>;
     harmonizedSystemCode?: ShopFeaturesToHarmonizedSystemCodeResolver<TParent>;
+    internationalDomains?: ShopFeaturesToInternationalDomainsResolver<TParent>;
     liveView?: ShopFeaturesToLiveViewResolver<TParent>;
     multiLocation?: ShopFeaturesToMultiLocationResolver<TParent>;
     onboardingVisual?: ShopFeaturesToOnboardingVisualResolver<TParent>;
@@ -39339,6 +42338,10 @@ export interface AppUsagePricing {
   }
   
   export interface ShopFeaturesToHarmonizedSystemCodeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ShopFeaturesToInternationalDomainsResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -39537,6 +42540,37 @@ export interface AppUsagePricing {
   }
   
   export interface FilterOptionToValueResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ShopPolicyTypeResolver<TParent = any> {
+    body?: ShopPolicyToBodyResolver<TParent>;
+    id?: ShopPolicyToIdResolver<TParent>;
+    translations?: ShopPolicyToTranslationsResolver<TParent>;
+    type?: ShopPolicyToTypeResolver<TParent>;
+    url?: ShopPolicyToUrlResolver<TParent>;
+  }
+  
+  export interface ShopPolicyToBodyResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ShopPolicyToIdResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ShopPolicyToTranslationsArgs {
+    locale: string;
+  }
+  export interface ShopPolicyToTranslationsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: ShopPolicyToTranslationsArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ShopPolicyToTypeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ShopPolicyToUrlResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -40312,6 +43346,7 @@ export interface AppUsagePricing {
   export interface WebhookSubscriptionTypeResolver<TParent = any> {
     callbackUrl?: WebhookSubscriptionToCallbackUrlResolver<TParent>;
     createdAt?: WebhookSubscriptionToCreatedAtResolver<TParent>;
+    endpoint?: WebhookSubscriptionToEndpointResolver<TParent>;
     format?: WebhookSubscriptionToFormatResolver<TParent>;
     id?: WebhookSubscriptionToIdResolver<TParent>;
     includeFields?: WebhookSubscriptionToIncludeFieldsResolver<TParent>;
@@ -40326,6 +43361,10 @@ export interface AppUsagePricing {
   }
   
   export interface WebhookSubscriptionToCreatedAtResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface WebhookSubscriptionToEndpointResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -40354,6 +43393,25 @@ export interface AppUsagePricing {
   }
   
   export interface WebhookSubscriptionToUpdatedAtResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface WebhookSubscriptionEndpointTypeResolver<TParent = any> {
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'WebhookEventBridgeEndpoint' | 'WebhookHttpEndpoint';
+  }
+  export interface WebhookEventBridgeEndpointTypeResolver<TParent = any> {
+    arn?: WebhookEventBridgeEndpointToArnResolver<TParent>;
+  }
+  
+  export interface WebhookEventBridgeEndpointToArnResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface WebhookHttpEndpointTypeResolver<TParent = any> {
+    callbackUrl?: WebhookHttpEndpointToCallbackUrlResolver<TParent>;
+  }
+  
+  export interface WebhookHttpEndpointToCallbackUrlResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -40424,12 +43482,16 @@ export interface AppUsagePricing {
     discountCodeActivate?: MutationToDiscountCodeActivateResolver<TParent>;
     discountCodeBasicCreate?: MutationToDiscountCodeBasicCreateResolver<TParent>;
     discountCodeBasicUpdate?: MutationToDiscountCodeBasicUpdateResolver<TParent>;
+    discountCodeBulkActivate?: MutationToDiscountCodeBulkActivateResolver<TParent>;
+    discountCodeBulkDeactivate?: MutationToDiscountCodeBulkDeactivateResolver<TParent>;
+    discountCodeBulkDelete?: MutationToDiscountCodeBulkDeleteResolver<TParent>;
     discountCodeBxgyCreate?: MutationToDiscountCodeBxgyCreateResolver<TParent>;
     discountCodeBxgyUpdate?: MutationToDiscountCodeBxgyUpdateResolver<TParent>;
     discountCodeDeactivate?: MutationToDiscountCodeDeactivateResolver<TParent>;
     discountCodeDelete?: MutationToDiscountCodeDeleteResolver<TParent>;
     discountCodeFreeShippingCreate?: MutationToDiscountCodeFreeShippingCreateResolver<TParent>;
     discountCodeFreeShippingUpdate?: MutationToDiscountCodeFreeShippingUpdateResolver<TParent>;
+    discountCodeRedeemCodeBulkDelete?: MutationToDiscountCodeRedeemCodeBulkDeleteResolver<TParent>;
     draftOrderCalculate?: MutationToDraftOrderCalculateResolver<TParent>;
     draftOrderComplete?: MutationToDraftOrderCompleteResolver<TParent>;
     draftOrderCreate?: MutationToDraftOrderCreateResolver<TParent>;
@@ -40437,6 +43499,8 @@ export interface AppUsagePricing {
     draftOrderInvoicePreview?: MutationToDraftOrderInvoicePreviewResolver<TParent>;
     draftOrderInvoiceSend?: MutationToDraftOrderInvoiceSendResolver<TParent>;
     draftOrderUpdate?: MutationToDraftOrderUpdateResolver<TParent>;
+    eventBridgeWebhookSubscriptionCreate?: MutationToEventBridgeWebhookSubscriptionCreateResolver<TParent>;
+    eventBridgeWebhookSubscriptionUpdate?: MutationToEventBridgeWebhookSubscriptionUpdateResolver<TParent>;
     flowTriggerReceive?: MutationToFlowTriggerReceiveResolver<TParent>;
     fulfillmentCancel?: MutationToFulfillmentCancelResolver<TParent>;
     fulfillmentCreate?: MutationToFulfillmentCreateResolver<TParent>;
@@ -40461,6 +43525,7 @@ export interface AppUsagePricing {
     inventoryDeactivate?: MutationToInventoryDeactivateResolver<TParent>;
     inventoryItemUpdate?: MutationToInventoryItemUpdateResolver<TParent>;
     kitSkillTriggerRequest?: MutationToKitSkillTriggerRequestResolver<TParent>;
+    marketingActivityCreate?: MutationToMarketingActivityCreateResolver<TParent>;
     marketingActivityUpdate?: MutationToMarketingActivityUpdateResolver<TParent>;
     marketingEngagementCreate?: MutationToMarketingEngagementCreateResolver<TParent>;
     metafieldDelete?: MutationToMetafieldDeleteResolver<TParent>;
@@ -40469,9 +43534,11 @@ export interface AppUsagePricing {
     orderCapture?: MutationToOrderCaptureResolver<TParent>;
     orderClose?: MutationToOrderCloseResolver<TParent>;
     orderEditAddCustomItem?: MutationToOrderEditAddCustomItemResolver<TParent>;
+    orderEditAddLineItemDiscount?: MutationToOrderEditAddLineItemDiscountResolver<TParent>;
     orderEditAddVariant?: MutationToOrderEditAddVariantResolver<TParent>;
     orderEditBegin?: MutationToOrderEditBeginResolver<TParent>;
     orderEditCommit?: MutationToOrderEditCommitResolver<TParent>;
+    orderEditRemoveLineItemDiscount?: MutationToOrderEditRemoveLineItemDiscountResolver<TParent>;
     orderEditSetQuantity?: MutationToOrderEditSetQuantityResolver<TParent>;
     orderMarkAsPaid?: MutationToOrderMarkAsPaidResolver<TParent>;
     orderOpen?: MutationToOrderOpenResolver<TParent>;
@@ -40486,6 +43553,7 @@ export interface AppUsagePricing {
     privateMetafieldDelete?: MutationToPrivateMetafieldDeleteResolver<TParent>;
     privateMetafieldUpsert?: MutationToPrivateMetafieldUpsertResolver<TParent>;
     productAppendImages?: MutationToProductAppendImagesResolver<TParent>;
+    productChangeStatus?: MutationToProductChangeStatusResolver<TParent>;
     productCreate?: MutationToProductCreateResolver<TParent>;
     productCreateMedia?: MutationToProductCreateMediaResolver<TParent>;
     productDelete?: MutationToProductDeleteResolver<TParent>;
@@ -40499,8 +43567,10 @@ export interface AppUsagePricing {
     productUnpublish?: MutationToProductUnpublishResolver<TParent>;
     productUpdate?: MutationToProductUpdateResolver<TParent>;
     productUpdateMedia?: MutationToProductUpdateMediaResolver<TParent>;
+    productVariantAppendMedia?: MutationToProductVariantAppendMediaResolver<TParent>;
     productVariantCreate?: MutationToProductVariantCreateResolver<TParent>;
     productVariantDelete?: MutationToProductVariantDeleteResolver<TParent>;
+    productVariantDetachMedia?: MutationToProductVariantDetachMediaResolver<TParent>;
     productVariantUpdate?: MutationToProductVariantUpdateResolver<TParent>;
     publishablePublish?: MutationToPublishablePublishResolver<TParent>;
     publishablePublishToCurrentChannel?: MutationToPublishablePublishToCurrentChannelResolver<TParent>;
@@ -40519,6 +43589,7 @@ export interface AppUsagePricing {
     shopLocaleDisable?: MutationToShopLocaleDisableResolver<TParent>;
     shopLocaleEnable?: MutationToShopLocaleEnableResolver<TParent>;
     shopLocaleUpdate?: MutationToShopLocaleUpdateResolver<TParent>;
+    shopPolicyUpdate?: MutationToShopPolicyUpdateResolver<TParent>;
     stagedUploadTargetGenerate?: MutationToStagedUploadTargetGenerateResolver<TParent>;
     stagedUploadTargetsGenerate?: MutationToStagedUploadTargetsGenerateResolver<TParent>;
     stagedUploadsCreate?: MutationToStagedUploadsCreateResolver<TParent>;
@@ -40839,6 +43910,33 @@ export interface AppUsagePricing {
     (parent: TParent, args: MutationToDiscountCodeBasicUpdateArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface MutationToDiscountCodeBulkActivateArgs {
+    search?: string;
+    savedSearchId?: string;
+    ids?: Array<string>;
+  }
+  export interface MutationToDiscountCodeBulkActivateResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: MutationToDiscountCodeBulkActivateArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MutationToDiscountCodeBulkDeactivateArgs {
+    search?: string;
+    savedSearchId?: string;
+    ids?: Array<string>;
+  }
+  export interface MutationToDiscountCodeBulkDeactivateResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: MutationToDiscountCodeBulkDeactivateArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MutationToDiscountCodeBulkDeleteArgs {
+    search?: string;
+    savedSearchId?: string;
+    ids?: Array<string>;
+  }
+  export interface MutationToDiscountCodeBulkDeleteResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: MutationToDiscountCodeBulkDeleteArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface MutationToDiscountCodeBxgyCreateArgs {
     bxgyCodeDiscount: DiscountCodeBxgyInput;
   }
@@ -40881,6 +43979,16 @@ export interface AppUsagePricing {
   }
   export interface MutationToDiscountCodeFreeShippingUpdateResolver<TParent = any, TResult = any> {
     (parent: TParent, args: MutationToDiscountCodeFreeShippingUpdateArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MutationToDiscountCodeRedeemCodeBulkDeleteArgs {
+    discountId: string;
+    search?: string;
+    savedSearchId?: string;
+    ids?: Array<string>;
+  }
+  export interface MutationToDiscountCodeRedeemCodeBulkDeleteResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: MutationToDiscountCodeRedeemCodeBulkDeleteArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface MutationToDraftOrderCalculateArgs {
@@ -40934,6 +44042,22 @@ export interface AppUsagePricing {
   }
   export interface MutationToDraftOrderUpdateResolver<TParent = any, TResult = any> {
     (parent: TParent, args: MutationToDraftOrderUpdateArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MutationToEventBridgeWebhookSubscriptionCreateArgs {
+    topic: WebhookSubscriptionTopic;
+    webhookSubscription: EventBridgeWebhookSubscriptionInput;
+  }
+  export interface MutationToEventBridgeWebhookSubscriptionCreateResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: MutationToEventBridgeWebhookSubscriptionCreateArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MutationToEventBridgeWebhookSubscriptionUpdateArgs {
+    id: string;
+    webhookSubscription: EventBridgeWebhookSubscriptionInput;
+  }
+  export interface MutationToEventBridgeWebhookSubscriptionUpdateResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: MutationToEventBridgeWebhookSubscriptionUpdateArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface MutationToFlowTriggerReceiveArgs {
@@ -41132,6 +44256,13 @@ export interface AppUsagePricing {
     (parent: TParent, args: MutationToKitSkillTriggerRequestArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface MutationToMarketingActivityCreateArgs {
+    input: MarketingActivityCreateInput;
+  }
+  export interface MutationToMarketingActivityCreateResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: MutationToMarketingActivityCreateArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface MutationToMarketingActivityUpdateArgs {
     input: MarketingActivityUpdateInput;
   }
@@ -41195,11 +44326,21 @@ export interface AppUsagePricing {
     (parent: TParent, args: MutationToOrderEditAddCustomItemArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface MutationToOrderEditAddLineItemDiscountArgs {
+    id: string;
+    lineItemId: string;
+    discount: OrderEditAppliedDiscountInput;
+  }
+  export interface MutationToOrderEditAddLineItemDiscountResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: MutationToOrderEditAddLineItemDiscountArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface MutationToOrderEditAddVariantArgs {
     id: string;
     variantId: string;
     locationId?: string;
     quantity: number;
+    allowDuplicates?: boolean;
   }
   export interface MutationToOrderEditAddVariantResolver<TParent = any, TResult = any> {
     (parent: TParent, args: MutationToOrderEditAddVariantArgs, context: any, info: GraphQLResolveInfo): TResult;
@@ -41219,6 +44360,14 @@ export interface AppUsagePricing {
   }
   export interface MutationToOrderEditCommitResolver<TParent = any, TResult = any> {
     (parent: TParent, args: MutationToOrderEditCommitArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MutationToOrderEditRemoveLineItemDiscountArgs {
+    id: string;
+    discountApplicationId: string;
+  }
+  export interface MutationToOrderEditRemoveLineItemDiscountResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: MutationToOrderEditRemoveLineItemDiscountArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface MutationToOrderEditSetQuantityArgs {
@@ -41328,6 +44477,14 @@ export interface AppUsagePricing {
     (parent: TParent, args: MutationToProductAppendImagesArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface MutationToProductChangeStatusArgs {
+    productId: string;
+    status: ProductStatus;
+  }
+  export interface MutationToProductChangeStatusResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: MutationToProductChangeStatusArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface MutationToProductCreateArgs {
     input: ProductInput;
     media?: Array<CreateMediaInput>;
@@ -41370,6 +44527,7 @@ export interface AppUsagePricing {
   export interface MutationToProductDuplicateArgs {
     productId: string;
     newTitle: string;
+    newStatus?: ProductStatus;
     includeImages?: boolean;
   }
   export interface MutationToProductDuplicateResolver<TParent = any, TResult = any> {
@@ -41429,6 +44587,14 @@ export interface AppUsagePricing {
     (parent: TParent, args: MutationToProductUpdateMediaArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface MutationToProductVariantAppendMediaArgs {
+    productId: string;
+    variantMedia: Array<ProductVariantAppendMediaInput>;
+  }
+  export interface MutationToProductVariantAppendMediaResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: MutationToProductVariantAppendMediaArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface MutationToProductVariantCreateArgs {
     input: ProductVariantInput;
   }
@@ -41441,6 +44607,14 @@ export interface AppUsagePricing {
   }
   export interface MutationToProductVariantDeleteResolver<TParent = any, TResult = any> {
     (parent: TParent, args: MutationToProductVariantDeleteArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MutationToProductVariantDetachMediaArgs {
+    productId: string;
+    variantMedia: Array<ProductVariantDetachMediaInput>;
+  }
+  export interface MutationToProductVariantDetachMediaResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: MutationToProductVariantDetachMediaArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface MutationToProductVariantUpdateArgs {
@@ -41571,6 +44745,13 @@ export interface AppUsagePricing {
   }
   export interface MutationToShopLocaleUpdateResolver<TParent = any, TResult = any> {
     (parent: TParent, args: MutationToShopLocaleUpdateArgs, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MutationToShopPolicyUpdateArgs {
+    shopPolicy: ShopPolicyInput;
+  }
+  export interface MutationToShopPolicyUpdateResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: MutationToShopPolicyUpdateArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface MutationToStagedUploadTargetGenerateArgs {
@@ -42247,6 +45428,45 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface DiscountCodeBulkActivatePayloadTypeResolver<TParent = any> {
+    job?: DiscountCodeBulkActivatePayloadToJobResolver<TParent>;
+    userErrors?: DiscountCodeBulkActivatePayloadToUserErrorsResolver<TParent>;
+  }
+  
+  export interface DiscountCodeBulkActivatePayloadToJobResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCodeBulkActivatePayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCodeBulkDeactivatePayloadTypeResolver<TParent = any> {
+    job?: DiscountCodeBulkDeactivatePayloadToJobResolver<TParent>;
+    userErrors?: DiscountCodeBulkDeactivatePayloadToUserErrorsResolver<TParent>;
+  }
+  
+  export interface DiscountCodeBulkDeactivatePayloadToJobResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCodeBulkDeactivatePayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCodeBulkDeletePayloadTypeResolver<TParent = any> {
+    job?: DiscountCodeBulkDeletePayloadToJobResolver<TParent>;
+    userErrors?: DiscountCodeBulkDeletePayloadToUserErrorsResolver<TParent>;
+  }
+  
+  export interface DiscountCodeBulkDeletePayloadToJobResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCodeBulkDeletePayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface DiscountCodeBxgyCreatePayloadTypeResolver<TParent = any> {
     codeDiscountNode?: DiscountCodeBxgyCreatePayloadToCodeDiscountNodeResolver<TParent>;
     userErrors?: DiscountCodeBxgyCreatePayloadToUserErrorsResolver<TParent>;
@@ -42322,6 +45542,19 @@ export interface AppUsagePricing {
   }
   
   export interface DiscountCodeFreeShippingUpdatePayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCodeRedeemCodeBulkDeletePayloadTypeResolver<TParent = any> {
+    job?: DiscountCodeRedeemCodeBulkDeletePayloadToJobResolver<TParent>;
+    userErrors?: DiscountCodeRedeemCodeBulkDeletePayloadToUserErrorsResolver<TParent>;
+  }
+  
+  export interface DiscountCodeRedeemCodeBulkDeletePayloadToJobResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface DiscountCodeRedeemCodeBulkDeletePayloadToUserErrorsResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -42597,6 +45830,32 @@ export interface AppUsagePricing {
   }
   
   export interface DraftOrderUpdatePayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface EventBridgeWebhookSubscriptionCreatePayloadTypeResolver<TParent = any> {
+    userErrors?: EventBridgeWebhookSubscriptionCreatePayloadToUserErrorsResolver<TParent>;
+    webhookSubscription?: EventBridgeWebhookSubscriptionCreatePayloadToWebhookSubscriptionResolver<TParent>;
+  }
+  
+  export interface EventBridgeWebhookSubscriptionCreatePayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface EventBridgeWebhookSubscriptionCreatePayloadToWebhookSubscriptionResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface EventBridgeWebhookSubscriptionUpdatePayloadTypeResolver<TParent = any> {
+    userErrors?: EventBridgeWebhookSubscriptionUpdatePayloadToUserErrorsResolver<TParent>;
+    webhookSubscription?: EventBridgeWebhookSubscriptionUpdatePayloadToWebhookSubscriptionResolver<TParent>;
+  }
+  
+  export interface EventBridgeWebhookSubscriptionUpdatePayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface EventBridgeWebhookSubscriptionUpdatePayloadToWebhookSubscriptionResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -42932,12 +46191,35 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface MarketingActivityCreatePayloadTypeResolver<TParent = any> {
+    marketingActivity?: MarketingActivityCreatePayloadToMarketingActivityResolver<TParent>;
+    redirectPath?: MarketingActivityCreatePayloadToRedirectPathResolver<TParent>;
+    userErrors?: MarketingActivityCreatePayloadToUserErrorsResolver<TParent>;
+  }
+  
+  export interface MarketingActivityCreatePayloadToMarketingActivityResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MarketingActivityCreatePayloadToRedirectPathResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MarketingActivityCreatePayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface MarketingActivityUpdatePayloadTypeResolver<TParent = any> {
     marketingActivity?: MarketingActivityUpdatePayloadToMarketingActivityResolver<TParent>;
+    redirectPath?: MarketingActivityUpdatePayloadToRedirectPathResolver<TParent>;
     userErrors?: MarketingActivityUpdatePayloadToUserErrorsResolver<TParent>;
   }
   
   export interface MarketingActivityUpdatePayloadToMarketingActivityResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MarketingActivityUpdatePayloadToRedirectPathResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -43135,12 +46417,14 @@ export interface AppUsagePricing {
   }
   
   export interface CalculatedLineItemTypeResolver<TParent = any> {
+    calculatedDiscountAllocations?: CalculatedLineItemToCalculatedDiscountAllocationsResolver<TParent>;
     customAttributes?: CalculatedLineItemToCustomAttributesResolver<TParent>;
     discountAllocations?: CalculatedLineItemToDiscountAllocationsResolver<TParent>;
     discountedUnitPriceSet?: CalculatedLineItemToDiscountedUnitPriceSetResolver<TParent>;
     editableQuantity?: CalculatedLineItemToEditableQuantityResolver<TParent>;
     editableQuantityBeforeChanges?: CalculatedLineItemToEditableQuantityBeforeChangesResolver<TParent>;
     editableSubtotalSet?: CalculatedLineItemToEditableSubtotalSetResolver<TParent>;
+    hasStagedLineItemDiscount?: CalculatedLineItemToHasStagedLineItemDiscountResolver<TParent>;
     id?: CalculatedLineItemToIdResolver<TParent>;
     image?: CalculatedLineItemToImageResolver<TParent>;
     originalUnitPriceSet?: CalculatedLineItemToOriginalUnitPriceSetResolver<TParent>;
@@ -43153,6 +46437,10 @@ export interface AppUsagePricing {
     uneditableSubtotalSet?: CalculatedLineItemToUneditableSubtotalSetResolver<TParent>;
     variant?: CalculatedLineItemToVariantResolver<TParent>;
     variantTitle?: CalculatedLineItemToVariantTitleResolver<TParent>;
+  }
+  
+  export interface CalculatedLineItemToCalculatedDiscountAllocationsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface CalculatedLineItemToCustomAttributesResolver<TParent = any, TResult = any> {
@@ -43176,6 +46464,10 @@ export interface AppUsagePricing {
   }
   
   export interface CalculatedLineItemToEditableSubtotalSetResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedLineItemToHasStagedLineItemDiscountResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -43227,8 +46519,24 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface CalculatedDiscountAllocationTypeResolver<TParent = any> {
+    allocatedAmountSet?: CalculatedDiscountAllocationToAllocatedAmountSetResolver<TParent>;
+    discountApplication?: CalculatedDiscountAllocationToDiscountApplicationResolver<TParent>;
+  }
+  
+  export interface CalculatedDiscountAllocationToAllocatedAmountSetResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedDiscountAllocationToDiscountApplicationResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedDiscountApplicationTypeResolver<TParent = any> {
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'CalculatedAutomaticDiscountApplication' | 'CalculatedDiscountCodeApplication' | 'CalculatedManualDiscountApplication' | 'CalculatedScriptDiscountApplication';
+  }
   export interface OrderStagedChangeTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'OrderStagedChangeAddCustomItem' | 'OrderStagedChangeAddVariant' | 'OrderStagedChangeIncrementItem' | 'OrderStagedChangeDecrementItem';
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'OrderStagedChangeAddCustomItem' | 'OrderStagedChangeAddLineItemDiscount' | 'OrderStagedChangeAddShippingLine' | 'OrderStagedChangeAddVariant' | 'OrderStagedChangeDecrementItem' | 'OrderStagedChangeIncrementItem';
   }
   export interface OrderStagedChangeAddCustomItemTypeResolver<TParent = any> {
     originalUnitPrice?: OrderStagedChangeAddCustomItemToOriginalUnitPriceResolver<TParent>;
@@ -43248,6 +46556,47 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface OrderStagedChangeAddLineItemDiscountTypeResolver<TParent = any> {
+    description?: OrderStagedChangeAddLineItemDiscountToDescriptionResolver<TParent>;
+    id?: OrderStagedChangeAddLineItemDiscountToIdResolver<TParent>;
+    value?: OrderStagedChangeAddLineItemDiscountToValueResolver<TParent>;
+  }
+  
+  export interface OrderStagedChangeAddLineItemDiscountToDescriptionResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderStagedChangeAddLineItemDiscountToIdResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderStagedChangeAddLineItemDiscountToValueResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderStagedChangeAddShippingLineTypeResolver<TParent = any> {
+    phone?: OrderStagedChangeAddShippingLineToPhoneResolver<TParent>;
+    presentmentTitle?: OrderStagedChangeAddShippingLineToPresentmentTitleResolver<TParent>;
+    price?: OrderStagedChangeAddShippingLineToPriceResolver<TParent>;
+    title?: OrderStagedChangeAddShippingLineToTitleResolver<TParent>;
+  }
+  
+  export interface OrderStagedChangeAddShippingLineToPhoneResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderStagedChangeAddShippingLineToPresentmentTitleResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderStagedChangeAddShippingLineToPriceResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderStagedChangeAddShippingLineToTitleResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface OrderStagedChangeAddVariantTypeResolver<TParent = any> {
     quantity?: OrderStagedChangeAddVariantToQuantityResolver<TParent>;
     variant?: OrderStagedChangeAddVariantToVariantResolver<TParent>;
@@ -43258,19 +46607,6 @@ export interface AppUsagePricing {
   }
   
   export interface OrderStagedChangeAddVariantToVariantResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface OrderStagedChangeIncrementItemTypeResolver<TParent = any> {
-    delta?: OrderStagedChangeIncrementItemToDeltaResolver<TParent>;
-    lineItem?: OrderStagedChangeIncrementItemToLineItemResolver<TParent>;
-  }
-  
-  export interface OrderStagedChangeIncrementItemToDeltaResolver<TParent = any, TResult = any> {
-    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
-  }
-  
-  export interface OrderStagedChangeIncrementItemToLineItemResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -43292,7 +46628,21 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface OrderStagedChangeIncrementItemTypeResolver<TParent = any> {
+    delta?: OrderStagedChangeIncrementItemToDeltaResolver<TParent>;
+    lineItem?: OrderStagedChangeIncrementItemToLineItemResolver<TParent>;
+  }
+  
+  export interface OrderStagedChangeIncrementItemToDeltaResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderStagedChangeIncrementItemToLineItemResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface CalculatedOrderTypeResolver<TParent = any> {
+    addedDiscountApplications?: CalculatedOrderToAddedDiscountApplicationsResolver<TParent>;
     addedLineItems?: CalculatedOrderToAddedLineItemsResolver<TParent>;
     cartDiscountAmountSet?: CalculatedOrderToCartDiscountAmountSetResolver<TParent>;
     committed?: CalculatedOrderToCommittedResolver<TParent>;
@@ -43308,6 +46658,17 @@ export interface AppUsagePricing {
     taxLines?: CalculatedOrderToTaxLinesResolver<TParent>;
     totalOutstandingSet?: CalculatedOrderToTotalOutstandingSetResolver<TParent>;
     totalPriceSet?: CalculatedOrderToTotalPriceSetResolver<TParent>;
+  }
+  
+  export interface CalculatedOrderToAddedDiscountApplicationsArgs {
+    first?: number;
+    after?: string;
+    last?: number;
+    before?: string;
+    reverse?: boolean;
+  }
+  export interface CalculatedOrderToAddedDiscountApplicationsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: CalculatedOrderToAddedDiscountApplicationsArgs, context: any, info: GraphQLResolveInfo): TResult;
   }
   
   export interface CalculatedOrderToAddedLineItemsArgs {
@@ -43392,6 +46753,32 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface CalculatedDiscountApplicationConnectionTypeResolver<TParent = any> {
+    edges?: CalculatedDiscountApplicationConnectionToEdgesResolver<TParent>;
+    pageInfo?: CalculatedDiscountApplicationConnectionToPageInfoResolver<TParent>;
+  }
+  
+  export interface CalculatedDiscountApplicationConnectionToEdgesResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedDiscountApplicationConnectionToPageInfoResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedDiscountApplicationEdgeTypeResolver<TParent = any> {
+    cursor?: CalculatedDiscountApplicationEdgeToCursorResolver<TParent>;
+    node?: CalculatedDiscountApplicationEdgeToNodeResolver<TParent>;
+  }
+  
+  export interface CalculatedDiscountApplicationEdgeToCursorResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedDiscountApplicationEdgeToNodeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface CalculatedLineItemConnectionTypeResolver<TParent = any> {
     edges?: CalculatedLineItemConnectionToEdgesResolver<TParent>;
     pageInfo?: CalculatedLineItemConnectionToPageInfoResolver<TParent>;
@@ -43444,6 +46831,29 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface OrderEditAddLineItemDiscountPayloadTypeResolver<TParent = any> {
+    addedDiscountStagedChange?: OrderEditAddLineItemDiscountPayloadToAddedDiscountStagedChangeResolver<TParent>;
+    calculatedLineItem?: OrderEditAddLineItemDiscountPayloadToCalculatedLineItemResolver<TParent>;
+    calculatedOrder?: OrderEditAddLineItemDiscountPayloadToCalculatedOrderResolver<TParent>;
+    userErrors?: OrderEditAddLineItemDiscountPayloadToUserErrorsResolver<TParent>;
+  }
+  
+  export interface OrderEditAddLineItemDiscountPayloadToAddedDiscountStagedChangeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderEditAddLineItemDiscountPayloadToCalculatedLineItemResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderEditAddLineItemDiscountPayloadToCalculatedOrderResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderEditAddLineItemDiscountPayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface OrderEditAddVariantPayloadTypeResolver<TParent = any> {
     calculatedLineItem?: OrderEditAddVariantPayloadToCalculatedLineItemResolver<TParent>;
     calculatedOrder?: OrderEditAddVariantPayloadToCalculatedOrderResolver<TParent>;
@@ -43485,6 +46895,24 @@ export interface AppUsagePricing {
   }
   
   export interface OrderEditCommitPayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderEditRemoveLineItemDiscountPayloadTypeResolver<TParent = any> {
+    calculatedLineItem?: OrderEditRemoveLineItemDiscountPayloadToCalculatedLineItemResolver<TParent>;
+    calculatedOrder?: OrderEditRemoveLineItemDiscountPayloadToCalculatedOrderResolver<TParent>;
+    userErrors?: OrderEditRemoveLineItemDiscountPayloadToUserErrorsResolver<TParent>;
+  }
+  
+  export interface OrderEditRemoveLineItemDiscountPayloadToCalculatedLineItemResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderEditRemoveLineItemDiscountPayloadToCalculatedOrderResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface OrderEditRemoveLineItemDiscountPayloadToUserErrorsResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -43764,6 +47192,37 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface ProductChangeStatusPayloadTypeResolver<TParent = any> {
+    product?: ProductChangeStatusPayloadToProductResolver<TParent>;
+    userErrors?: ProductChangeStatusPayloadToUserErrorsResolver<TParent>;
+  }
+  
+  export interface ProductChangeStatusPayloadToProductResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ProductChangeStatusPayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ProductChangeStatusUserErrorTypeResolver<TParent = any> {
+    code?: ProductChangeStatusUserErrorToCodeResolver<TParent>;
+    field?: ProductChangeStatusUserErrorToFieldResolver<TParent>;
+    message?: ProductChangeStatusUserErrorToMessageResolver<TParent>;
+  }
+  
+  export interface ProductChangeStatusUserErrorToCodeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ProductChangeStatusUserErrorToFieldResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ProductChangeStatusUserErrorToMessageResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface ProductCreatePayloadTypeResolver<TParent = any> {
     product?: ProductCreatePayloadToProductResolver<TParent>;
     shop?: ProductCreatePayloadToShopResolver<TParent>;
@@ -44037,6 +47496,24 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface ProductVariantAppendMediaPayloadTypeResolver<TParent = any> {
+    product?: ProductVariantAppendMediaPayloadToProductResolver<TParent>;
+    productVariants?: ProductVariantAppendMediaPayloadToProductVariantsResolver<TParent>;
+    userErrors?: ProductVariantAppendMediaPayloadToUserErrorsResolver<TParent>;
+  }
+  
+  export interface ProductVariantAppendMediaPayloadToProductResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ProductVariantAppendMediaPayloadToProductVariantsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ProductVariantAppendMediaPayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface ProductVariantCreatePayloadTypeResolver<TParent = any> {
     product?: ProductVariantCreatePayloadToProductResolver<TParent>;
     productVariant?: ProductVariantCreatePayloadToProductVariantResolver<TParent>;
@@ -44070,6 +47547,24 @@ export interface AppUsagePricing {
   }
   
   export interface ProductVariantDeletePayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ProductVariantDetachMediaPayloadTypeResolver<TParent = any> {
+    product?: ProductVariantDetachMediaPayloadToProductResolver<TParent>;
+    productVariants?: ProductVariantDetachMediaPayloadToProductVariantsResolver<TParent>;
+    userErrors?: ProductVariantDetachMediaPayloadToUserErrorsResolver<TParent>;
+  }
+  
+  export interface ProductVariantDetachMediaPayloadToProductResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ProductVariantDetachMediaPayloadToProductVariantsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ProductVariantDetachMediaPayloadToUserErrorsResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -44329,6 +47824,37 @@ export interface AppUsagePricing {
   }
   
   export interface ShopLocaleUpdatePayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ShopPolicyUpdatePayloadTypeResolver<TParent = any> {
+    shopPolicy?: ShopPolicyUpdatePayloadToShopPolicyResolver<TParent>;
+    userErrors?: ShopPolicyUpdatePayloadToUserErrorsResolver<TParent>;
+  }
+  
+  export interface ShopPolicyUpdatePayloadToShopPolicyResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ShopPolicyUpdatePayloadToUserErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ShopPolicyUserErrorTypeResolver<TParent = any> {
+    code?: ShopPolicyUserErrorToCodeResolver<TParent>;
+    field?: ShopPolicyUserErrorToFieldResolver<TParent>;
+    message?: ShopPolicyUserErrorToMessageResolver<TParent>;
+  }
+  
+  export interface ShopPolicyUserErrorToCodeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ShopPolicyUserErrorToFieldResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface ShopPolicyUserErrorToMessageResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
@@ -44657,6 +48183,163 @@ export interface AppUsagePricing {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
+  export interface CalculatedAutomaticDiscountApplicationTypeResolver<TParent = any> {
+    allocationMethod?: CalculatedAutomaticDiscountApplicationToAllocationMethodResolver<TParent>;
+    appliedTo?: CalculatedAutomaticDiscountApplicationToAppliedToResolver<TParent>;
+    description?: CalculatedAutomaticDiscountApplicationToDescriptionResolver<TParent>;
+    id?: CalculatedAutomaticDiscountApplicationToIdResolver<TParent>;
+    targetSelection?: CalculatedAutomaticDiscountApplicationToTargetSelectionResolver<TParent>;
+    targetType?: CalculatedAutomaticDiscountApplicationToTargetTypeResolver<TParent>;
+    value?: CalculatedAutomaticDiscountApplicationToValueResolver<TParent>;
+  }
+  
+  export interface CalculatedAutomaticDiscountApplicationToAllocationMethodResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedAutomaticDiscountApplicationToAppliedToResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedAutomaticDiscountApplicationToDescriptionResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedAutomaticDiscountApplicationToIdResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedAutomaticDiscountApplicationToTargetSelectionResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedAutomaticDiscountApplicationToTargetTypeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedAutomaticDiscountApplicationToValueResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedDiscountCodeApplicationTypeResolver<TParent = any> {
+    allocationMethod?: CalculatedDiscountCodeApplicationToAllocationMethodResolver<TParent>;
+    appliedTo?: CalculatedDiscountCodeApplicationToAppliedToResolver<TParent>;
+    code?: CalculatedDiscountCodeApplicationToCodeResolver<TParent>;
+    description?: CalculatedDiscountCodeApplicationToDescriptionResolver<TParent>;
+    id?: CalculatedDiscountCodeApplicationToIdResolver<TParent>;
+    targetSelection?: CalculatedDiscountCodeApplicationToTargetSelectionResolver<TParent>;
+    targetType?: CalculatedDiscountCodeApplicationToTargetTypeResolver<TParent>;
+    value?: CalculatedDiscountCodeApplicationToValueResolver<TParent>;
+  }
+  
+  export interface CalculatedDiscountCodeApplicationToAllocationMethodResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedDiscountCodeApplicationToAppliedToResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedDiscountCodeApplicationToCodeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedDiscountCodeApplicationToDescriptionResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedDiscountCodeApplicationToIdResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedDiscountCodeApplicationToTargetSelectionResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedDiscountCodeApplicationToTargetTypeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedDiscountCodeApplicationToValueResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedManualDiscountApplicationTypeResolver<TParent = any> {
+    allocationMethod?: CalculatedManualDiscountApplicationToAllocationMethodResolver<TParent>;
+    appliedTo?: CalculatedManualDiscountApplicationToAppliedToResolver<TParent>;
+    description?: CalculatedManualDiscountApplicationToDescriptionResolver<TParent>;
+    id?: CalculatedManualDiscountApplicationToIdResolver<TParent>;
+    targetSelection?: CalculatedManualDiscountApplicationToTargetSelectionResolver<TParent>;
+    targetType?: CalculatedManualDiscountApplicationToTargetTypeResolver<TParent>;
+    value?: CalculatedManualDiscountApplicationToValueResolver<TParent>;
+  }
+  
+  export interface CalculatedManualDiscountApplicationToAllocationMethodResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedManualDiscountApplicationToAppliedToResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedManualDiscountApplicationToDescriptionResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedManualDiscountApplicationToIdResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedManualDiscountApplicationToTargetSelectionResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedManualDiscountApplicationToTargetTypeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedManualDiscountApplicationToValueResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedScriptDiscountApplicationTypeResolver<TParent = any> {
+    allocationMethod?: CalculatedScriptDiscountApplicationToAllocationMethodResolver<TParent>;
+    appliedTo?: CalculatedScriptDiscountApplicationToAppliedToResolver<TParent>;
+    description?: CalculatedScriptDiscountApplicationToDescriptionResolver<TParent>;
+    id?: CalculatedScriptDiscountApplicationToIdResolver<TParent>;
+    targetSelection?: CalculatedScriptDiscountApplicationToTargetSelectionResolver<TParent>;
+    targetType?: CalculatedScriptDiscountApplicationToTargetTypeResolver<TParent>;
+    value?: CalculatedScriptDiscountApplicationToValueResolver<TParent>;
+  }
+  
+  export interface CalculatedScriptDiscountApplicationToAllocationMethodResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedScriptDiscountApplicationToAppliedToResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedScriptDiscountApplicationToDescriptionResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedScriptDiscountApplicationToIdResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedScriptDiscountApplicationToTargetSelectionResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedScriptDiscountApplicationToTargetTypeResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface CalculatedScriptDiscountApplicationToValueResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
   export interface CommentEventTypeResolver<TParent = any> {
     appTitle?: CommentEventToAppTitleResolver<TParent>;
     attachments?: CommentEventToAttachmentsResolver<TParent>;
@@ -44770,7 +48453,7 @@ export interface AppUsagePricing {
   }
   
   export interface CommentEventEmbedTypeResolver<TParent = any> {
-    (parent: TParent, context: any, info: GraphQLResolveInfo): 'Order' | 'DraftOrder' | 'Customer' | 'Product' | 'ProductVariant';
+    (parent: TParent, context: any, info: GraphQLResolveInfo): 'Customer' | 'DraftOrder' | 'Order' | 'Product' | 'ProductVariant';
   }
   export interface DiscountCodeApplicationTypeResolver<TParent = any> {
     allocationMethod?: DiscountCodeApplicationToAllocationMethodResolver<TParent>;
@@ -44887,6 +48570,7 @@ export interface AppUsagePricing {
     image?: MediaImageToImageResolver<TParent>;
     mediaContentType?: MediaImageToMediaContentTypeResolver<TParent>;
     mediaErrors?: MediaImageToMediaErrorsResolver<TParent>;
+    mimeType?: MediaImageToMimeTypeResolver<TParent>;
     preview?: MediaImageToPreviewResolver<TParent>;
     status?: MediaImageToStatusResolver<TParent>;
   }
@@ -44908,6 +48592,10 @@ export interface AppUsagePricing {
   }
   
   export interface MediaImageToMediaErrorsResolver<TParent = any, TResult = any> {
+    (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
+  }
+  
+  export interface MediaImageToMimeTypeResolver<TParent = any, TResult = any> {
     (parent: TParent, args: {}, context: any, info: GraphQLResolveInfo): TResult;
   }
   
