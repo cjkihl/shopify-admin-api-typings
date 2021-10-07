@@ -1,23 +1,14 @@
-const { GraphQLClient } = require("graphql-request");
-const { generateTypeScriptTypes } = require("graphql-schema-typescript");
-const { buildClientSchema } = require("graphql/utilities/buildClientSchema");
-const { introspectionQuery } = require("graphql/utilities/introspectionQuery");
-require("dotenv").config();
+import { GraphQLClient } from 'graphql-request';
+import { generateTypeScriptTypes } from 'graphql-schema-typescript';
+import { buildClientSchema, getIntrospectionQuery } from 'graphql';
+import { config } from 'dotenv';
 
-const graphQLClient = new GraphQLClient(process.env.ADMIN_ENDPOINT, {
+config();
+
+const data = await new GraphQLClient(process.env.ADMIN_ENDPOINT, {
   headers: {
-    "X-Shopify-Access-Token": process.env.ACCESS_TOKEN,
+    'X-Shopify-Access-Token': process.env.ACCESS_TOKEN,
   },
-});
-
-graphQLClient.request(introspectionQuery).then((data) => {
-  const build = buildClientSchema(data);
-  generateTypeScriptTypes(build, "./index.d.ts", { typePrefix: "" })
-    .then(() => {
-      process.exit(0);
-    })
-    .catch((err) => {
-      console.error(err);
-      process.exit(1);
-    });
-});
+}).request(getIntrospectionQuery());
+const build = buildClientSchema(data);
+await generateTypeScriptTypes(build, './index.d.ts', { typePrefix: '' });
